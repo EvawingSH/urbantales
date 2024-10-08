@@ -45,9 +45,13 @@ export function FilterTable() {
   })
   const [items, setItems] = useState<Item[]>([])
   const [selectedItems, setSelectedItems] = useState<number[]>([])
+  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [expandedItems, setExpandedItems] = useState<number[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [totalSize, setTotalSize] = useState(0)
   const { toast } = useToast()
+
+  
 
   const fetchInitialItems = useCallback(async () => {
     console.log("Fetching initial items...")
@@ -75,9 +79,8 @@ export function FilterTable() {
   const updateItemsWithS3Contents = useCallback(async () => {
     try {
       const s3Data = await fetchS3Contents()
-      // console.log('s3', s3Data)
       setItems(prevItems => {
-        // console.log("Previous items:", prevItems)
+        console.log("Previous items:", prevItems)
         const newItems = prevItems.map(item => {
           const itemFolder = findFolder(s3Data, item.folder)
           console.log(`S3 contents for ${item.name}:`, itemFolder)
@@ -86,7 +89,7 @@ export function FilterTable() {
             s3Contents: itemFolder
           }
         })
-        // console.log("New items:", newItems)
+        console.log("New items:", newItems)
         return newItems
       })
     } catch (error) {
@@ -157,17 +160,47 @@ export function FilterTable() {
     ))
   }
 
+
+
   const handleItemSelect = (id: number) => {
-    setSelectedItems(prev => 
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    )
+    const item = items.find(i => i.id === id)
+    if (item && item.s3Contents) {
+      const allFileNames = item.s3Contents.files.map(file => file.name)
+      const allSelected = allFileNames.every(fileName => selectedFiles.has(fileName))
+
+      setSelectedFiles(prev => {
+        const newSet = new Set(prev)
+        allFileNames.forEach(fileName => {
+          if (allSelected) {
+            newSet.delete(fileName)
+          } else {
+            newSet.add(fileName)
+          }
+        })
+        return newSet
+      })
+
+      setSelectedItems(prev => {
+        if (allSelected) {
+          return prev.filter(itemId => itemId !== id)
+        } else {
+          return [...prev, id]
+        }
+      })
+    }
   }
 
   const handleSelectAll = () => {
     if (selectedItems.length === filteredItems.length) {
       setSelectedItems([])
+      setSelectedFiles(new Set())
     } else {
       setSelectedItems(filteredItems.map(item => item.id))
+      const allFiles = new Set<string>()
+      filteredItems.forEach(item => {
+        item.s3Contents?.files.forEach(file => allFiles.add(file.name))
+      })
+      setSelectedFiles(allFiles)
     }
   }
 
@@ -176,21 +209,82 @@ export function FilterTable() {
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     )
   }
+  const updateTotalSize = useCallback(() => {
+    let size = 0
+    items.forEach(item => {
+      if (selectedItems.includes(item.id) && item.s3Contents) {
+        item.s3Contents.files.forEach(file => {
+          size += file.size
+        })
+      }
+    })
+    setTotalSize(size)
+  }, [items, selectedItems])
 
-  const handleDownload = () => {
-    const selectedFiles = filteredItems
-      .filter(item => selectedItems.includes(item.id))
-      .flatMap(item => item.s3Contents?.files || [])
+  useEffect(() => {
+    updateTotalSize()
+  }, [selectedItems, updateTotalSize])
+  const isDownloadDisabled = totalSize > 20 * 1024 * 1024 // 20MB in bytes
 
-    console.log('Files to download:', selectedFiles)
+  const handleDownload = async () => {
+    const filesToDownload = Array.from(selectedFiles)
+    console.log('Files to download:', filesToDownload)
     toast({
       title: "Download Initiated",
-      description: `Downloading ${selectedFiles.length} file(s)`,
+      // description: `Downloading ${filesToDownload.length} file(s)`,
+      description: `Downloading ${filesToDownload.length} file(s) (${formatFileSize(totalSize)})`,
     })
 
-    selectedFiles.forEach(file => {
-      window.open(file.url, '_blank')
-    })
+    for (const fileName of filesToDownload) {
+      const file = items.flatMap(item => item.s3Contents?.files || []).find(f => f.name === fileName)
+      if (file) {
+        try {
+          const response = await fetch(file.url)
+          const blob = await response.blob()
+          const url = window.URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.style.display = 'none'
+          a.href = url
+          a.download = fileName
+          document.body.appendChild(a)
+          a.click()
+          window.URL.revokeObjectURL(url)
+        } catch (error) {
+          console.error(`Error downloading file ${fileName}:`, error)
+          toast({
+            title: "Download Error",
+            description: `Failed to download ${fileName}. Please try again.`,
+            variant: "destructive",
+          })
+        }
+      }
+    }
+  }
+
+  const handleSingleFileDownload = async (file: S3Object) => {
+    try {
+      const response = await fetch(file.url)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.style.display = 'none'
+      a.href = url
+      a.download = file.name
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      toast({
+        title: "Download Success",
+        description: `${file.name} has been downloaded.`,
+      })
+    } catch (error) {
+      console.error(`Error downloading file ${file.name}:`, error)
+      toast({
+        title: "Download Error",
+        description: `Failed to download ${file.name}. Please try again.`,
+        variant: "destructive",
+      })
+    }
   }
 
   const formatFileSize = (size: number) => {
@@ -199,7 +293,35 @@ export function FilterTable() {
     return `${(size / (1024 * 1024)).toFixed(2)} MB`
   }
 
-  const renderS3Contents = (s3Contents: S3Folder | null) => {
+  const handleFileSelect = (fileName: string, itemId: number) => {
+    setSelectedFiles(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(fileName)) {
+        newSet.delete(fileName)
+      } else {
+        newSet.add(fileName)
+      }
+      return newSet
+    })
+
+    updateItemSelection(itemId)
+  }
+
+  const updateItemSelection = (itemId: number) => {
+    const item = items.find(i => i.id === itemId)
+    if (item && item.s3Contents) {
+      const allFilesSelected = item.s3Contents.files.every(file => selectedFiles.has(file.name))
+      setSelectedItems(prev => {
+        if (allFilesSelected) {
+          return [...prev, itemId]
+        } else {
+          return prev.filter(id => id !== itemId)
+        }
+      })
+    }
+  }
+
+  const renderS3Contents = (s3Contents: S3Folder | null, itemId: number) => {
     if (!s3Contents) {
       return <p className="text-sm text-muted-foreground">No files available for this item.</p>
     }
@@ -210,8 +332,8 @@ export function FilterTable() {
           <div key={index} className="flex items-center justify-between mb-2">
             <div className="flex items-center">
               <Checkbox
-                checked={selectedItems.includes(parseInt(file.name))}
-                onCheckedChange={() => handleItemSelect(parseInt(file.name))}
+                checked={selectedFiles.has(file.name)}
+                onCheckedChange={() => handleFileSelect(file.name, itemId)}
                 aria-label={`Select ${file.name}`}
               />
               <span className="ml-2">{file.name} ({formatFileSize(file.size)})</span>
@@ -219,7 +341,7 @@ export function FilterTable() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.open(file.url, '_blank')}
+              onClick={() => handleSingleFileDownload(file)}
             >
               <Download className="h-4 w-4" />
             </Button>
@@ -234,7 +356,7 @@ export function FilterTable() {
                   {subfolder.name}
                 </AccordionTrigger>
                 <AccordionContent>
-                  {renderS3Contents(subfolder)}
+                  {renderS3Contents(subfolder, itemId)}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -288,7 +410,7 @@ export function FilterTable() {
                 </div>
               </AccordionContent>
             </AccordionItem>
-            <AccordionItem value="height">
+            <AccordionItem  value="height">
               <AccordionTrigger className="text-base font-medium">Height</AccordionTrigger>
               <AccordionContent>
                 <div className="grid gap-2">
@@ -322,11 +444,11 @@ export function FilterTable() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[50px]">
-                  <Checkbox
+                  {/* <Checkbox
                     checked={selectedItems.length === filteredItems.length && filteredItems.length > 0}
                     onCheckedChange={handleSelectAll}
                     aria-label="Select all"
-                  />
+                  /> */}
                 </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Description</TableHead>
@@ -359,7 +481,7 @@ export function FilterTable() {
                         ) : (
                           <ChevronRight className="h-4 w-4 mr-2" />
                         )}
-                        {item.name}
+                        <span>{item.name}</span>
                       </Button>
                     </TableCell>
                     <TableCell>{item.description}</TableCell>
@@ -372,7 +494,7 @@ export function FilterTable() {
                     <TableRow>
                       <TableCell colSpan={7}>
                         <div className="pl-8 py-2">
-                          {renderS3Contents(item.s3Contents)}
+                          {renderS3Contents(item.s3Contents, item.id)}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -384,9 +506,9 @@ export function FilterTable() {
           <div className="mt-4 flex justify-end pt-6">
             <Button 
               onClick={handleDownload}
-              disabled={selectedItems.length === 0}
+              disabled={selectedFiles.size === 0 || isDownloadDisabled}
             >
-              Download ({selectedItems.length})
+              Download ({formatFileSize(totalSize)})
             </Button>
           </div>
         </div>
