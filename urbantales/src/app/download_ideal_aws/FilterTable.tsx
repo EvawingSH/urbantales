@@ -1,34 +1,35 @@
-"use client";
+'use client'
 
-import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { S3Folder, fetchS3Contents, findFolder } from "@/utils/s3Utils";
-import { FilterSection } from "./FilterSection";
-import { ItemTable } from "./ItemTable";
-import { Item, Filters } from "./types";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import React, { useState, useMemo, useEffect, useCallback } from "react"
+import { Search } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/components/ui/use-toast"
+import { S3Folder, fetchS3Contents, findFolder } from "@/utils/s3Utils"
+import { FilterSection } from "./FilterSection"
+import { ItemTable } from "./ItemTable"
+import { Item, Filters } from "./types"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import JSZip from 'jszip'
 
-export function FilterTable() {
-  const [searchTerm, setSearchTerm] = useState("");
+export default function FilterTable() {
+  const [searchTerm, setSearchTerm] = useState("")
   const [filters, setFilters] = useState<Filters>({
     alignment: ["All"],
     height: ["All"],
     density: ["All"],
     windDirection: ["All"],
-  });
-  const [items, setItems] = useState<Item[]>([]);
-  const [selectedItems, setSelectedItems] = useState<number[]>([]);
-  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
-  const [expandedItems, setExpandedItems] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [totalSize, setTotalSize] = useState(0);
-  const [allSelected, setAllSelected] = useState(false);
-  const { toast } = useToast();
+  })
+  const [items, setItems] = useState<Item[]>([])
+  const [selectedItems, setSelectedItems] = useState<number[]>([])
+  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
+  const [expandedItems, setExpandedItems] = useState<number[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [totalSize, setTotalSize] = useState(0)
+  const [allSelected, setAllSelected] = useState(false)
+  const { toast } = useToast()
 
-  const limitation = 50 * 1024 * 1024 * 2;
+  const limitation = 50 * 1024 * 1024 * 2
 
   const fetchInitialItems = useCallback(async () => {
     console.log("Fetching initial items...")
@@ -143,45 +144,44 @@ export function FilterTable() {
   }
 
   const handleFileSelect = (fileName: string, itemId: number, forceSelect?: boolean, fromItemSelect: boolean = false) => {
-    const item = items.find(i => i.id === itemId);
+    const item = items.find(i => i.id === itemId)
     if (item && item.s3Contents) {
-      const file = item.s3Contents.files.find(f => f.name === fileName);
+      const file = item.s3Contents.files.find(f => f.name === fileName)
       if (file) {
         setSelectedFiles(prev => {
-          const newSet = new Set(prev);
-          const isCurrentlySelected = newSet.has(fileName);
-          const shouldBeSelected = forceSelect === undefined ? !isCurrentlySelected : forceSelect;
+          const newSet = new Set(prev)
+          const isCurrentlySelected = newSet.has(fileName)
+          const shouldBeSelected = forceSelect === undefined ? !isCurrentlySelected : forceSelect
 
           if (shouldBeSelected && !isCurrentlySelected) {
-            newSet.add(fileName);
-            setTotalSize(prevSize => prevSize + file.size);
+            newSet.add(fileName)
+            setTotalSize(prevSize => prevSize + file.size)
           } else if (!shouldBeSelected && isCurrentlySelected) {
-            newSet.delete(fileName);
-            setTotalSize(prevSize => prevSize - file.size);
+            newSet.delete(fileName)
+            setTotalSize(prevSize => prevSize - file.size)
           }
 
-          return newSet;
-        });
+          return newSet
+        })
 
         if (!fromItemSelect) {
-          // Update the item's selection state
           setSelectedItems(prev => {
             const allFilesSelected = item.s3Contents!.files.every(f => 
               f.name === fileName ? (forceSelect === undefined ? !selectedFiles.has(f.name) : forceSelect) : selectedFiles.has(f.name)
-            );
+            )
 
             if (allFilesSelected && !prev.includes(itemId)) {
-              return [...prev, itemId];
+              return [...prev, itemId]
             } else if (!allFilesSelected && prev.includes(itemId)) {
-              return prev.filter(id => id !== itemId);
+              return prev.filter(id => id !== itemId)
             }
-            return prev;
-          });
+            return prev
+          })
         }
       }
 
       if (!fromItemSelect) {
-        updateAllSelectedState();
+        updateAllSelectedState()
       }
     }
   }
@@ -189,30 +189,33 @@ export function FilterTable() {
   const updateAllSelectedState = () => {
     const allFilesSelected = items.every(item => 
       item.s3Contents?.files.every(file => selectedFiles.has(file.name)) ?? false
-    );
-    setAllSelected(allFilesSelected);
+    )
+    setAllSelected(allFilesSelected)
   }
 
   const handleSelectAll = () => {
-    const newAllSelected = !allSelected;
-    setAllSelected(newAllSelected);
+    const newAllSelected = !allSelected
+    setAllSelected(newAllSelected)
 
     items.forEach(item => {
       if (item.s3Contents) {
         item.s3Contents.files.forEach(file => {
-          handleFileSelect(file.name, item.id, newAllSelected);
-        });
+          handleFileSelect(file.name, item.id, newAllSelected)
+        })
       }
-    });
-  };
+    })
+  }
 
   const handleDownload = async () => {
     const filesToDownload = Array.from(selectedFiles)
     console.log('Files to download:', filesToDownload)
     toast({
       title: "Download Initiated",
-      description: `Downloading ${filesToDownload.length} file(s) (${formatFileSize(totalSize)})`,
+      description: `Preparing ${filesToDownload.length} file(s) (${formatFileSize(totalSize)}) for download`,
     })
+
+    const zip = new JSZip()
+    let failedFiles = 0
 
     for (const fileName of filesToDownload) {
       const file = items.flatMap(item => item.s3Contents?.files || []).find(f => f.name === fileName)
@@ -220,23 +223,43 @@ export function FilterTable() {
         try {
           const response = await fetch(file.url)
           const blob = await response.blob()
-          const url = window.URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.style.display = 'none'
-          a.href = url
-          a.download = fileName
-          document.body.appendChild(a)
-          a.click()
-          window.URL.revokeObjectURL(url)
+          zip.file(fileName, blob)
         } catch (error) {
           console.error(`Error downloading file ${fileName}:`, error)
-          toast({
-            title: "Download Error",
-            description: `Failed to download ${fileName}. Please try again.`,
-            variant: "destructive",
-          })
+          failedFiles++
         }
       }
+    }
+
+    if (failedFiles > 0) {
+      toast({
+        title: "Download Warning",
+        description: `Failed to include ${failedFiles} file(s) in the zip. They will be omitted.`,
+        variant: "destructive",
+      })
+    }
+
+    try {
+      const content = await zip.generateAsync({ type: "blob" })
+      const url = window.URL.createObjectURL(content)
+      const a = document.createElement('a')
+      a.style.display = 'none'
+      a.href = url
+      a.download = "selected_files.zip"
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      toast({
+        title: "Download Complete",
+        description: `Successfully downloaded ${filesToDownload.length - failedFiles} file(s) as a zip.`,
+      })
+    } catch (error) {
+      console.error('Error creating zip file:', error)
+      toast({
+        title: "Download Error",
+        description: "Failed to create zip file. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -301,17 +324,15 @@ export function FilterTable() {
           onClick={handleDownload}
           disabled={selectedFiles.size === 0 || totalSize > limitation}
         >
-          Download ({formatFileSize(totalSize)})
+          Download({formatFileSize(totalSize)})
         </Button>
       </div>
     </div>
   )
 }
 
-
-
 function formatFileSize(size: number) {
-  if (size < 1024 * 2) return `${size / 2} B`;
-  if (size < 1024 * 1024 * 2) return `${(size / 1024 / 2).toFixed(1)} KB`;
-  return `${(size / (1024 * 2 * 1024)).toFixed(1)} MB`;
+  if (size < 1024 * 2) return `${size / 2} B`
+  if (size < 1024 * 1024 * 2) return `${(size / 1024 / 2).toFixed(1)} KB`
+  return `${(size / (1024 * 2 * 1024)).toFixed(1)} MB`
 }

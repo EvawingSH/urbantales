@@ -46,3 +46,22 @@ export const fetchS3Contents = async (): Promise<S3Folder> => {
     throw error;
   }
 };
+
+export const fetchIdealizedModelMeta = async (): Promise<any> => {
+  try {
+    const response = await fetch('https://urbantalestest.s3.ap-southeast-2.amazonaws.com/IdealizedModelmeta.json');
+    if (!response.ok) {
+      throw new Error('Failed to fetch IdealizedModelmeta.json');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching IdealizedModelmeta.json:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch metadata. Please try again.",
+      variant: "destructive",
+    });
+    throw error;
+  }
+};

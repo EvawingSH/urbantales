@@ -1,6 +1,6 @@
 [
   {
-      "NameE": "UA0625_d00",
+      "Name": "UA0625_d00",
       "Config": "idealized-uniform_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -11,7 +11,7 @@
       "Height": "uniform"
   },
   {
-      "NameE": "UA1111_d00",
+      "Name": "UA1111_d00",
       "Config": "idealized-uniform_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -22,7 +22,7 @@
       "Height": "uniform"
   },
   {
-      "NameE": "UA16_d00",
+      "Name": "UA16_d00",
       "Config": "idealized-uniform_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -33,7 +33,7 @@
       "Height": "uniform"
   },
   {
-      "NameE": "UA25_d00",
+      "Name": "UA25_d00",
       "Config": "idealized-uniform_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -44,7 +44,7 @@
       "Height": "uniform"
   },
   {
-      "NameE": "UA35_d00",
+      "Name": "UA35_d00",
       "Config": "idealized-uniform_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -55,7 +55,7 @@
       "Height": "uniform"
   },
   {
-      "NameE": "UA4444_d00",
+      "Name": "UA4444_d00",
       "Config": "idealized-uniform_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -66,7 +66,7 @@
       "Height": "uniform"
   },
   {
-      "NameE": "UA53_d00",
+      "Name": "UA53_d00",
       "Config": "idealized-uniform_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -77,7 +77,7 @@
       "Height": "uniform"
   },
   {
-      "NameE": "UA64_d00",
+      "Name": "UA64_d00",
       "Config": "idealized-uniform_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -88,7 +88,7 @@
       "Height": "uniform"
   },
   {
-      "NameE": "VA0625-SM-28_d00",
+      "Name": "VA0625-SM-28_d00",
       "Config": "idealized-CL_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -99,7 +99,7 @@
       "Height": "variable"
   },
   {
-      "NameE": "VA1111-SM-28_d00",
+      "Name": "VA1111-SM-28_d00",
       "Config": "idealized-CL_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -110,7 +110,7 @@
       "Height": "variable"
   },
   {
-      "NameE": "VA16-SM-28_d00",
+      "Name": "VA16-SM-28_d00",
       "Config": "idealized-CL_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -121,7 +121,7 @@
       "Height": "variable"
   },
   {
-      "NameE": "VA25-SM-28_d00",
+      "Name": "VA25-SM-28_d00",
       "Config": "idealized-CL_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -132,7 +132,7 @@
       "Height": "variable"
   },
   {
-      "NameE": "VA35-SM-28_d00",
+      "Name": "VA35-SM-28_d00",
       "Config": "idealized-CL_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -143,7 +143,7 @@
       "Height": "variable"
   },
   {
-      "NameE": "VA4444-SM-28_d00",
+      "Name": "VA4444-SM-28_d00",
       "Config": "idealized-CL_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -154,7 +154,7 @@
       "Height": "variable"
   },
   {
-      "NameE": "VA53-SM-28_d00",
+      "Name": "VA53-SM-28_d00",
       "Config": "idealized-CL_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -165,7 +165,7 @@
       "Height": "variable"
   },
   {
-      "NameE": "VA64-SM-28_d00",
+      "Name": "VA64-SM-28_d00",
       "Config": "idealized-CL_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -176,7 +176,7 @@
       "Height": "variable"
   },
   {
-      "NameE": "VA0625-SM-56_d00",
+      "Name": "VA0625-SM-56_d00",
       "Config": "idealized-CL_d00",
       "Wind direction": "0",
       "Alignment": "Aligned",
@@ -185,38 +185,6 @@
       "Size (MB)": "8.42",
       "Density": "sparse",
       "Height": "variable"
-  },
-  {
-      "NameE": "VA1111-SM-56_d00",
-      "Config": "idealized-CL_d00",
-      "Wind direction": "0",
-      "Alignment": "Aligned",
-      "Folder Name": "VA1111-SM-56_d00",
-      "Direct Download Link": "http://140.238.197.250:6002/index.php/s/xSzpboTkkGPyGPs/download",
-      "Size (MB)": "5.74",
-      "Density": "sparse",
-      "Height": "variable"
-  },
-  {
-      "NameE": "VA16-SM-56_d00",
-      "Config": "idealized-CL_d00",
-      "Wind direction": "0",
-      "Alignment": "Aligned",
-      "Folder Name": "VA16-SM-56_d00",
-      "Direct Download Link": "http://140.238.197.250:6002/index.php/s/77F3WWZKi9tH7LT/download",
-      "Size (MB)": "4.69",
-      "Density": "sparse",
-      "Height": "variable"
-  },
-  {
-      "NameE": "VA25-SM-56_d00",
-      "Config": "idealized-CL_d00",
-      "Wind direction": "0",
-      "Alignment": "Aligned",
-      "Folder Name": "VA25-SM-56_d00",
-      "Direct Download Link": "http://140.238.197.250:6002/index.php/s/4wJepHsPZqHjeyC/download",
-      "Size (MB)": "3.84",
-      "Density": "medium",
-      "Height": "variable"
   }
+
 ]

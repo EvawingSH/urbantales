@@ -19,7 +19,6 @@ interface ItemTableProps {
   allSelected: boolean
 }
 
- 
 
 export function ItemTable({
   filteredItems,

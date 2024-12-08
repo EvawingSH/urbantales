@@ -45,6 +45,7 @@ export default function DataTable() {
     windDirection: [],
     density: []
   })
+  
   const [searchTerm, setSearchTerm] = useState('')
   const [openFilters, setOpenFilters] = useState<{ [key: string]: boolean }>({
     alignment: false,
