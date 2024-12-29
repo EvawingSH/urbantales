@@ -8,7 +8,7 @@ import { Download, Search, ChevronDown, ChevronRight } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
-import { fetchMetadata } from '@/utils/s3meta'
+import { fetchMetadataIdeal } from '@/utils/s3meta'
 import {
   Collapsible,
   CollapsibleContent,
@@ -45,6 +45,7 @@ export default function DataTable() {
     windDirection: [],
     density: []
   })
+  
   const [searchTerm, setSearchTerm] = useState('')
   const [openFilters, setOpenFilters] = useState<{ [key: string]: boolean }>({
     alignment: false,
@@ -57,7 +58,7 @@ export default function DataTable() {
     const loadData = async () => {
       try {
         setLoading(true)
-        const metadata = await fetchMetadata()
+        const metadata = await fetchMetadataIdeal()
         setData(metadata)
       } catch (err) {
         setError('Failed to load metadata')

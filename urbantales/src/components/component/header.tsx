@@ -32,13 +32,13 @@ export function Header() {
             href="/idealized_models_main" 
             className="text-gray-600 font-semibold hover:text-gray-800 nav-link"
           >
-            Idealized models
+            Idealized building blocks
           </Link>
           <Link 
             href="/realistic-models_main" 
             className="text-gray-600 font-semibold hover:text-gray-800 nav-link"
           >
-            Realistic models
+            Realistic urban neighbourhoods
           </Link>
           <Link 
             href="/" 

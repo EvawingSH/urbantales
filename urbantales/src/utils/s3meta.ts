@@ -12,9 +12,28 @@ export interface Metadata {
   Height: string;
 }
 
-export const fetchMetadata = async (): Promise<Metadata[]> => {
+export const fetchMetadataIdeal = async (): Promise<Metadata[]> => {
   try {
-    const response = await fetch('/api/metadata');
+    const response = await fetch('/api/metadata_ideal');
+    if (!response.ok) {
+      throw new Error('Failed to fetch metadata');
+    }
+    const data: Metadata[] = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching metadata:', error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch metadata. Please try again.",
+      variant: "destructive",
+    });
+    throw error;
+  }
+};
+
+export const fetchMetadataRea = async (): Promise<Metadata[]> => {
+  try {
+    const response = await fetch('/api/metadata_rea');
     if (!response.ok) {
       throw new Error('Failed to fetch metadata');
     }

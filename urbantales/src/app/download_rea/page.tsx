@@ -1,12 +1,13 @@
-import { ReaIdeMain } from "./rea-ide-main";
+
+import FilterTable from "./FilterTable";
 import { Header } from "@/components/component/header";
-import {Footer} from "@/components/component/footer";
+import { Footer } from "@/components/component/footer";
 
 export default function Page() {
   return (
     <div>
       <Header />
-      <ReaIdeMain />
+      <FilterTable />
       <Footer />
     </div>
   );

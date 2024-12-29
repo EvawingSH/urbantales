@@ -33,8 +33,19 @@ export function Intro() {
             </h1>
               <p className="text-base md:text-xl lg:text-2xl" style={whiteTextStyle}>
                 Most studies relies on a limited representation of urban areas to answer this question, posing challenges in extrapolating findings and introducing uncertainties in surface flux parameterizations. 
-                We introduce a comprehensive dataset of Urban Tubulent Airflow using LES.
+                We present a comprehensive dataset of Urban Tubulent Airflow using LES that:
               </p>
+              <ul className="text-base md:text-xl lg:text-2xl list-none pl-6 pt-5 space-y-2">
+                {['cover a range of horizontal and vertical heterogeneities seen in realistic urban neighborhoods',
+                  'facilitate systematic assessments of urban form impact on urban canopy processes',
+                  'provide insights for various urban canopy models',
+                  'openly available'].map((item, index) => (
+                  <li key={index} style={whiteTextStyle}>
+                    {index + 1}. {item}
+                  </li>
+                  
+                ))}
+              </ul>
               </div>
             ) : (
                 <div>
@@ -42,13 +53,13 @@ export function Intro() {
               UrbanTALES: A comprehensive dataset of Urban Turbulent Airflow using systematic Large Eddy Simulations (LES)
             </h1>
              <p className="text-base md:text-xl lg:text-2xl" style={whiteTextStyle}>
-               We present a comprehensive dataset of Urban Tubulent Airflow using LES that:
+            Understanding urban turbulent airflow through high-resolution LES simulations
               </p>
               <ul className="text-base md:text-xl lg:text-2xl list-none pl-6 pt-5 space-y-2">
-                {['cover a range of horizontal and vertical heterogeneities seen in realistic urban neighborhoods',
-                  'facilitate systematic assessments of urban form impact on urban canopy processes',
-                  'provide insights for various urban canopy models',
-                  'openly available'].map((item, index) => (
+                {['Turbulent airflow over 538 urban configurations was simulated using the state-of-the-art LES model, amounting to the largest urban flow dataset openly available.',
+                  'Rigorous validated and quality controlled.',
+                  'The simulation outputs were processed to facilitate urban canopy parameterization and general urban climate modelling practice.'
+                  ].map((item, index) => (
                   <li key={index} style={whiteTextStyle}>
                     {index + 1}. {item}
                   </li>
