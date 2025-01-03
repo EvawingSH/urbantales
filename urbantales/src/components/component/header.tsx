@@ -29,13 +29,13 @@ export function Header() {
           </div>
           <nav className="hidden md:flex space-x-6">
           <Link 
-            href="/idealized_models_main" 
+            href="/realistic_idealized_main" 
             className="text-gray-600 font-semibold hover:text-gray-800 nav-link"
           >
             Idealized building blocks
           </Link>
           <Link 
-            href="/realistic-models_main" 
+            href="/realistic_idealized_main" 
             className="text-gray-600 font-semibold hover:text-gray-800 nav-link"
           >
             Realistic urban neighbourhoods
@@ -74,16 +74,16 @@ export function Header() {
         <div className="p-4 bg-white h-full">
           <nav className="mt-8 space-y-4">
             <Link 
-              href="/idealized-models" 
+              href="/realistic_idealized_main" 
               className="block text-gray-600 font-semibold hover:text-gray-800 nav-link-mobile"
             >
-              Idealized models
+              Idealized building blocks
             </Link>
             <Link 
-              href="/realistic-models" 
+              href="/realistic_idealized_main" 
               className="block text-gray-600 font-semibold hover:text-gray-800 nav-link-mobile"
             >
-              Realistic models
+              Realistic urban neighbourhoods
             </Link>
             <Link 
               href="/" 

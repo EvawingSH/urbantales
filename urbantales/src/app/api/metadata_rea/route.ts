@@ -28,7 +28,7 @@ async function getMetadata() {
   return JSON.parse(str);
 }
 
-async function updateMetadata(newMetadata: any) {
+async function updateMetadata(newMetadata: Record<string, unknown>) {
   const command = new PutObjectCommand({
     Bucket: bucketName,
     Key: fileName,
@@ -84,7 +84,7 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const metadata = await getMetadata();
-    const updatedMetadata = metadata.filter((item: any) => item.Name !== name);
+    const updatedMetadata = metadata.filter((item: Record<string, unknown>) => item.Name !== name);
     await updateMetadata(updatedMetadata);
     return NextResponse.json({ message: `Item '${name}' deleted successfully` });
   } catch (error) {

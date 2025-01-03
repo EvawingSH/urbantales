@@ -125,7 +125,7 @@ export function ReaIdeMain() {
               <Button variant="outline" className="shadow-sm">
                 Learn more
               </Button>
-              <Link href="/download_ideal" passHref>  
+              <Link href="/download_rea" passHref>  
               <Button className="shadow-md">Download data</Button>
               </Link>
             </CardFooter>

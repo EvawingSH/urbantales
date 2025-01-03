@@ -172,7 +172,7 @@ export default function DataTable() {
   }
 
   const filteredData = useMemo(() => {
-    let sortedData = data.filter(item => 
+    const sortedData = data.filter(item => 
       (filters.horizontalConfiguration.length === 0 || filters.horizontalConfiguration.includes(item["Horizontal Configuration"])) &&
       (filters.verticalConfiguration.length === 0 || filters.verticalConfiguration.includes(Number(item["Vertical Configuration"]).toFixed(2))) &&
       (filters.windDirection.length === 0 || filters.windDirection.includes(item["Wind Direction"])) &&
@@ -203,9 +203,9 @@ export default function DataTable() {
     areaDensity: Array.from(new Set(data.map(item => item["Area Density"])))
   }), [data])
 
-  const selectedItemsData = useMemo(() => {
-    return data.filter(item => selectedItems.includes(item["Folder Name"]))
-  }, [data, selectedItems])
+  // const selectedItemsData = useMemo(() => {
+  //   return data.filter(item => selectedItems.includes(item["Folder Name"]))
+  // }, [data, selectedItems])
 
   const totalSelectedSize = useMemo(() => {
     return Object.entries(selectedFiles).reduce((total, [folderName, fileNames]) => {
