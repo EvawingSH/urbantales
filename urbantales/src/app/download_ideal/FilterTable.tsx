@@ -423,7 +423,6 @@ export default function DataTable() {
                           className="text-xs px-2 py-1"
                         >
                           <Download className="h-3 w-3 mr-1" />
-                          Download
                         </Button>
                       </TableCell>
                     </TableRow>
