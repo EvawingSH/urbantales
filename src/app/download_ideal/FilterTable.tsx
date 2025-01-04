@@ -25,6 +25,7 @@ interface FolderItem {
   Config: string;
   "Horizontal Configuration": string;
   "Vertical Configuration": string;
+  "Vertical Config": string;
   "Wind Direction": string;
   "Area Density": string;
   Files: FileItem[];
@@ -153,18 +154,11 @@ export default function DataTable() {
       let updatedFilter: string[]
 
       if (value === 'all') {
-        updatedFilter = currentFilter.length === uniqueValues[filterType].length ? [] : uniqueValues[filterType]
+        updatedFilter = currentFilter.length === uniqueValues[filterType].length ? [] : uniqueValues[filterType].map(String);
       } else {
-        if (filterType === 'verticalConfiguration') {
-          const roundedValue = Number(value).toFixed(2)
-          updatedFilter = currentFilter.includes(roundedValue)
-            ? currentFilter.filter(item => item !== roundedValue)
-            : [...currentFilter, roundedValue].sort((a, b) => parseFloat(a) - parseFloat(b))
-        } else {
-          updatedFilter = currentFilter.includes(value)
-            ? currentFilter.filter(item => item !== value)
-            : [...currentFilter, value]
-        }
+        updatedFilter = currentFilter.includes(value)
+          ? currentFilter.filter(item => item !== value)
+          : [...currentFilter, value];
       }
 
       return { ...prev, [filterType]: updatedFilter }
@@ -174,7 +168,7 @@ export default function DataTable() {
   const filteredData = useMemo(() => {
     const sortedData = data.filter(item => 
       (filters.horizontalConfiguration.length === 0 || filters.horizontalConfiguration.includes(item["Horizontal Configuration"])) &&
-      (filters.verticalConfiguration.length === 0 || filters.verticalConfiguration.includes(Number(item["Vertical Configuration"]).toFixed(2))) &&
+      (filters.verticalConfiguration.length === 0 || filters.verticalConfiguration.includes(item["Vertical Configuration"])) &&
       (filters.windDirection.length === 0 || filters.windDirection.includes(item["Wind Direction"])) &&
       (filters.areaDensity.length === 0 || filters.areaDensity.includes(item["Area Density"])) &&
       item["Folder Name"].toLowerCase().includes(searchTerm.toLowerCase())
@@ -197,8 +191,7 @@ export default function DataTable() {
 
   const uniqueValues = useMemo(() => ({
     horizontalConfiguration: Array.from(new Set(data.map(item => item["Horizontal Configuration"]))),
-    verticalConfiguration: Array.from(new Set(data.map(item => Number(item["Vertical Configuration"]).toFixed(2))))
-      .sort((a, b) => parseFloat(a) - parseFloat(b)),
+    verticalConfiguration: Array.from(new Set(data.map(item => item["Vertical Configuration"]))),
     windDirection: Array.from(new Set(data.map(item => item["Wind Direction"]))),
     areaDensity: Array.from(new Set(data.map(item => item["Area Density"])))
   }), [data])
@@ -309,7 +302,7 @@ export default function DataTable() {
                           onCheckedChange={() => handleFilterChange(key as keyof Filters, value)}
                         />
                         <Label className='font-normal text-md' htmlFor={`${key}-${value}`}>
-                          {key === 'verticalConfiguration' ? Number(value).toFixed(2) : value}
+                          {value}
                         </Label>
                       </div>
                     ))}
@@ -362,7 +355,7 @@ export default function DataTable() {
                     </Button>
                   </TableHead>
                   <TableHead className="w-24">
-                    <Button variant="ghost" onClick={() => handleSort("Vertical Configuration")} >
+                    <Button variant="ghost" onClick={() => handleSort("Vertical Config")} >
                       Vertical Config
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
@@ -407,11 +400,11 @@ export default function DataTable() {
                         </Button>
                       </TableCell>
                       <TableCell className="text-xs">
-                        <div>{folder["Horizontal Configuration"].split(' ')[0]}</div>
-                        <div>{folder["Horizontal Configuration"].split(' ')[1]}</div>
+                        <div>{folder["Horizontal Configuration"]}</div>
+                        {/* <div>{folder["Horizontal Configuration"].split(' ')[1]}</div> */}
                       </TableCell>
                       <TableCell className="text-xs">
-                        <div>{Number(folder["Vertical Configuration"]).toFixed(2)}</div>
+                        <div>{Number(folder["Vertical Config"]).toFixed(2)}</div>
                       </TableCell>
                       <TableCell>{folder["Wind Direction"]}</TableCell>
                       <TableCell>{folder["Area Density"]}</TableCell>

@@ -31,7 +31,8 @@ export function ReaIdeMain() {
               </div>
               <div className="mt-4 text-md space-y-3">
                 <p className="font-semibold mb-2">
-                224 LES simulations over idealized building arrays were performed at 0.5 m resolution horizontally and vertically
+                  224 LES simulations over idealized building arrays were
+                  performed at 0.5 m resolution horizontally and vertically
                 </p>
                 <ul className="space-y-2 list-none pl-0">
                   <li className="flex">
@@ -39,38 +40,46 @@ export function ReaIdeMain() {
                       •
                     </span>
                     <span>
-                    8 plan area densities from 0.0625 to 0.64, covering most urban configurations in global cities. 
+                      8 plan area densities from 0.0625 to 0.64, covering most
+                      urban configurations in global cities.
                     </span>
-                  </li>
-                  <li className="flex">
-                    <span className="text-xl mr-2 flex-shrink-0 leading-[1.4]">
-                      •
-                    </span>
-                    <span>2 horizontal configurations (staggered and aligned)</span>
                   </li>
                   <li className="flex">
                     <span className="text-xl mr-2 flex-shrink-0 leading-[1.4]">
                       •
                     </span>
                     <span>
-                    7 building height distributions with Hstd = [0m,2.8m,5.6m]
+                      2 horizontal configurations (staggered and aligned)
+                    </span>
+                  </li>
+                  <li className="flex">
+                    <span className="text-xl mr-2 flex-shrink-0 leading-[1.4]">
+                      •
+                    </span>
+                    <span>
+                      7 building height distributions with Hstd = [0m,2.8m,5.6m]
                     </span>
                   </li>
                   <li className="flex">
                     <span className="text-lg mr-2 flex-shrink-0 leading-[1.4]">
                       •
                     </span>
-                    <span>2 wind directions (perpendicular and oblique to building blocks)</span>
+                    <span>
+                      2 wind directions (perpendicular and oblique to building
+                      blocks)
+                    </span>
                   </li>
                 </ul>
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline" className="shadow-sm">
-                Learn more
-              </Button>
-              <Link href="/download_ideal" passHref>  
-              <Button className="shadow-md">Download data</Button>
+              <Link href="/realistic_viz" passHref>
+                <Button variant="outline" className="shadow-sm">
+                  Learn more
+                </Button>
+              </Link>
+              <Link href="/download_ideal" passHref>
+                <Button className="shadow-md">Download data</Button>
               </Link>
             </CardFooter>
           </Card>
@@ -91,7 +100,8 @@ export function ReaIdeMain() {
               </div>
               <div className="mt-4 text-md space-y-3">
                 <p className="font-semibold mb-2">
-                314 LES simulations over realistic urban neighbourhoods were performed at 0.5 resolution vertically and 1m horizontally.
+                  314 LES simulations over realistic urban neighbourhoods were
+                  performed at 0.5 resolution vertically and 1m horizontally.
                 </p>
                 <ul className="space-y-2 list-none pl-0">
                   <li className="flex">
@@ -99,7 +109,8 @@ export function ReaIdeMain() {
                       •
                     </span>
                     <span>
-                    A representative range of urban densities is considered (0.05-0.75) in global cities.
+                      A representative range of urban densities is considered
+                      (0.05-0.75) in global cities.
                     </span>
                   </li>
                   <li className="flex">
@@ -107,26 +118,26 @@ export function ReaIdeMain() {
                       •
                     </span>
                     <span>
-                    Realistic urban geometries from 62 cities in 20 countries.
+                      Realistic urban geometries from 62 cities in 20 countries.
                     </span>
                   </li>
                   <li className="flex">
                     <span className="text-xl mr-2 flex-shrink-0 leading-[1.4]">
                       •
                     </span>
-                    <span>
-                    Covering multiple wind directions.
-                    </span>
+                    <span>Covering multiple wind directions.</span>
                   </li>
                 </ul>
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline" className="shadow-sm">
-                Learn more
-              </Button>
-              <Link href="/download_rea" passHref>  
-              <Button className="shadow-md">Download data</Button>
+              <Link href="/realistic_viz" passHref>
+                <Button variant="outline" className="shadow-sm">
+                  Learn more
+                </Button>
+              </Link>
+              <Link href="/download_rea" passHref>
+                <Button className="shadow-md">Download data</Button>
               </Link>
             </CardFooter>
           </Card>

@@ -3,10 +3,10 @@ import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/clien
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION,
+  region: process.env.MY_AWS_REGION,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.MY_AWS_SECRET_ACCESS_KEY || '',
   },
 });
 
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
 
   console.log("Prefix:", prefix);
 
-  const bucketName = process.env.S3_BUCKET_NAME;
+  const bucketName = process.env.MY_S3_BUCKET_NAME;
   if (!bucketName) {
     console.error('S3_BUCKET_NAME is not set in the environment variables');
     return NextResponse.json({ error: 'S3 bucket name is not configured' }, { status: 500 });

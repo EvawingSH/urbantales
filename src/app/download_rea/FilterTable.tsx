@@ -26,6 +26,7 @@ interface FolderItem {
   "Country": string;
   "City": string;
   "Vertical Configuration": string;
+  "Vertical Config": string;
   "Wind Direction": string;
   "Area Density": string;
   Files: FileItem[];
@@ -157,20 +158,15 @@ export default function DataTable() {
       let updatedFilter: string[];
 
       if (value === 'all') {
-        updatedFilter = currentFilter.length === uniqueValues[filterType].length ? [] : uniqueValues[filterType];
+        updatedFilter = currentFilter.length === uniqueValues[filterType].length ? [] : uniqueValues[filterType].map(String);
       } else {
-        if (filterType === 'verticalConfiguration') {
-          const roundedValue = Number(value).toFixed(2);
-          updatedFilter = currentFilter.includes(roundedValue)
-            ? currentFilter.filter(item => item !== roundedValue)
-            : [...currentFilter, roundedValue].sort((a, b) => parseFloat(a) - parseFloat(b));
-        } else {
-          updatedFilter = currentFilter.includes(value)
-            ? currentFilter.filter(item => item !== value)
-            : [...currentFilter, value];
-        }
-      }
+        updatedFilter = currentFilter.includes(value)
+          ? currentFilter.filter(item => item !== value)
+          : [...currentFilter, value];
 
+
+      }
+      // console.log(filterType)
       // Reset City filter when Country filter changes
       if (filterType === 'Country') {
         return { ...prev, [filterType]: updatedFilter, City: [] };
@@ -184,7 +180,7 @@ export default function DataTable() {
     let sortedData = data.filter(item => 
       (filters.Country.length === 0 || filters.Country.includes(item["Country"])) &&
       (filters.City.length === 0 || filters.City.includes(item["City"])) &&
-      (filters.verticalConfiguration.length === 0 || filters.verticalConfiguration.includes(Number(item["Vertical Configuration"]).toFixed(2))) &&
+      (filters.verticalConfiguration.length === 0 || filters.verticalConfiguration.includes(item["Vertical Configuration"])) &&
       (filters.windDirection.length === 0 || filters.windDirection.includes(item["Wind Direction"])) &&
       (filters.areaDensity.length === 0 || filters.areaDensity.includes(item["Area Density"])) &&
       item["Folder Name"].toLowerCase().includes(searchTerm.toLowerCase())
@@ -210,17 +206,30 @@ export default function DataTable() {
     const filteredData = filters.Country.length > 0
       ? data.filter(item => filters.Country.includes(item["Country"]))
       : data;
-
+  
+    const sortStrings = (array: string[]) =>
+      array.sort((a, b) => a.localeCompare(b)); // For alphabetical sorting
+  
+    const sortNumbers = (array: string[]) =>
+      array
+        .map((item) => (item === "" || item === null ? null : Number(item))) // Convert to number, handle empty/null
+        .sort((a, b) => {
+          if (a === null) return 1; // Push null to the end
+          if (b === null) return -1; // Push null to the end
+          return a - b; // Numerical sorting
+        });
+  
     return {
       Country: Array.from(countriesSet),
       City: Array.from(new Set(filteredData.map(item => item["City"]))),
-      verticalConfiguration: Array.from(new Set(data.map(item => Number(item["Vertical Configuration"]).toFixed(2))))
-        .sort((a, b) => parseFloat(a) - parseFloat(b)),
-      windDirection: Array.from(new Set(data.map(item => item["Wind Direction"]))),
+      verticalConfiguration: sortStrings(Array.from(new Set(data.map(item => item["Vertical Configuration"])))),
+      windDirection: sortNumbers(Array.from(new Set(data.map(item => item["Wind Direction"])))),
       areaDensity: Array.from(new Set(data.map(item => item["Area Density"])))
     };
-  }, [data, filters.Country])
-
+  }, [data, filters.Country]);
+  
+  
+// console.log(uniqueValues)
   const selectedItemsData = useMemo(() => {
     return data.filter(item => selectedItems.includes(item["Folder Name"]))
   }, [data, selectedItems])
@@ -300,7 +309,7 @@ export default function DataTable() {
                   <Label htmlFor={`${key}-filter`} className="text-base font-large">
                     {key === 'Country' ? 'Country' :
                     key === 'City' ? 'City' :
-                     key === 'verticalConfiguration' ? 'Vertical Configuration' :
+                     key === 'verticalConfiguration' ? "Vertical Configuration" :
                      key === 'windDirection' ? 'Wind Direction' :
                      key === 'areaDensity' ? 'Area Density' : key}
                   </Label>
@@ -325,10 +334,10 @@ export default function DataTable() {
                         <Checkbox 
                           id={`${key}-${value}`}
                           checked={selectedValues.includes(value)}
-                          onCheckedChange={() => handleFilterChange(key as keyof Filters, value)}
+                          onCheckedChange={() => handleFilterChange(key as keyof Filters, value as string)}
                         />
                         <Label className='font-normal text-md' htmlFor={`${key}-${value}`}>
-                          {key === 'verticalConfiguration' ? Number(value).toFixed(2) : value}
+                          {value}
                         </Label>
                       </div>
                     ))}
@@ -387,7 +396,7 @@ export default function DataTable() {
                     </Button>
                   </TableHead>
                   <TableHead className="w-20">
-                    <Button variant="ghost" onClick={() => handleSort("Vertical Configuration")} >
+                    <Button variant="ghost" onClick={() => handleSort("Vertical Config")} >
                       Vertical Config
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
@@ -434,7 +443,7 @@ export default function DataTable() {
                       <TableCell className="text-xs">{folder["Country"]}</TableCell>
                       <TableCell className="text-xs">{folder["City"]}</TableCell>
                       <TableCell className="text-xs">
-                        <div>{Number(folder["Vertical Configuration"]).toFixed(2)}</div>
+                        <div>{Number(folder["Vertical Config"]).toFixed(2)}</div>
                       </TableCell>
                       <TableCell>{folder["Wind Direction"]}</TableCell>
                       <TableCell>{folder["Area Density"]}</TableCell>
