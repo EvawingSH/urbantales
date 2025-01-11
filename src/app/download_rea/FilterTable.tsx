@@ -13,6 +13,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import {LoadingSpinner} from "@/components/component/loadingSpinner"
+import {Popup} from '@/components/component/Popup'
+import {Info} from 'lucide-react'
 
 interface FileItem {
   "File Name": string;
@@ -163,8 +166,6 @@ export default function DataTable() {
         updatedFilter = currentFilter.includes(value)
           ? currentFilter.filter(item => item !== value)
           : [...currentFilter, value];
-
-
       }
       // console.log(filterType)
       // Reset City filter when Country filter changes
@@ -294,7 +295,9 @@ export default function DataTable() {
     return folder ? selectedFiles[folderName]?.length === folder.Files.length : false
   }
 
-  if (loading) return <div>Loading...</div>
+  if (loading) return <div className='pt-6 pb-8'>
+    <LoadingSpinner size="md" />
+    </div>
   if (error) return <div>Error: {error}</div>
   return (
     <div className="container mx-auto pt-8">
@@ -313,6 +316,55 @@ export default function DataTable() {
                      key === 'windDirection' ? 'Wind Direction' :
                      key === 'areaDensity' ? 'Area Density' : key}
                   </Label>
+                  <Popup
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="p-0 text-gray-400 hover:text-gray-600 "
+                      >
+                        <Info className="h-4 w-4" />
+                      </Button>
+                    }
+                    content={
+                      <div className="max-w-xs">
+                        {key === "horizontalConfiguration" ? (
+                          <div className="text-gray-500 size-sm">
+                            <p>
+                              <strong>Aligned:</strong> Scenarios featuring a
+                              single, uninterrupted street aligned parallel to
+                              the prevailing wind direction, simulating an
+                              extreme case of urban layouts.
+                            </p>
+                            <p>
+                              <strong>Staggered:</strong> Scenarios that avoid
+                              the presence of major wind-aligned corridors,
+                              which can artificially reduce building drag and
+                              are often employed to calibrate urban canopy
+                              models (UCM).
+                            </p>
+                          </div>
+                        ) : key === "verticalConfiguration" ? (
+                          <p className="text-gray-500 size-sm">
+                            Vertical Configuration is reflected by the standard
+                            deviation of building height distribution
+                          </p>
+                        ) : key === "windDirection" ? (
+                          <p className="text-gray-500 size-sm">
+                      Wind Direction is the approaching angle to the urban
+                          </p>
+                        ) : key === "areaDensity" ? (
+                          <p className="text-gray-500 size-sm">
+                      Area Density is the ratio of total building footprint to the whole neighborhood area.
+                          </p>
+                        ) 
+                        : (
+                          "Location filter"
+                        )
+                        }
+                      </div>
+                    }
+                  />
                   <CollapsibleTrigger asChild>
                     <Button variant="ghost" size="sm">
                       {openFilters[key] ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}

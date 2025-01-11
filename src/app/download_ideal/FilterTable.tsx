@@ -1,18 +1,34 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect, useMemo } from 'react'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
-import { Download, Search, ChevronDown, ChevronRight, ArrowUpDown } from 'lucide-react'
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { toast } from "@/components/ui/use-toast"
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import {
+  Download,
+  Search,
+  ChevronDown,
+  ChevronRight,
+  ArrowUpDown,
+} from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/use-toast";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
+import { LoadingSpinner } from "@/components/component/loadingSpinner";
+import { Popup } from "@/components/component/Popup";
+import { Info } from "lucide-react";
 
 interface FileItem {
   "File Name": string;
@@ -39,189 +55,236 @@ interface Filters {
 }
 
 export default function DataTable() {
-  const [data, setData] = useState<FolderItem[]>([])
-  const [selectedItems, setSelectedItems] = useState<string[]>([])
-  const [selectedFiles, setSelectedFiles] = useState<{ [folderName: string]: string[] }>({})
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [data, setData] = useState<FolderItem[]>([]);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<{
+    [folderName: string]: string[];
+  }>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({
     horizontalConfiguration: [],
     verticalConfiguration: [],
     windDirection: [],
-    areaDensity: []
-  })
-  const [searchTerm, setSearchTerm] = useState('')
+    areaDensity: [],
+  });
+  const [searchTerm, setSearchTerm] = useState("");
   const [openFilters, setOpenFilters] = useState<{ [key: string]: boolean }>({
     horizontalConfiguration: false,
     verticalConfiguration: false,
     windDirection: false,
-    areaDensity: false
-  })
-  const [expandedFolders, setExpandedFolders] = useState<string[]>([])
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'ascending' | 'descending' } | null>(null)
+    areaDensity: false,
+  });
+  const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "ascending" | "descending";
+  } | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        setLoading(true)
-        const response = await fetch('/api/metadata_ideal')
-        const jsonData = await response.json()
-        setData(jsonData)
+        setLoading(true);
+        const response = await fetch("/api/metadata_ideal");
+        const jsonData = await response.json();
+        setData(jsonData);
       } catch (err) {
-        setError('Failed to load metadata')
+        setError("Failed to load metadata");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    loadData()
-  }, [])
+    loadData();
+  }, []);
 
   const handleFolderCheckboxChange = (folderName: string) => {
-    setSelectedItems(prev => {
+    setSelectedItems((prev) => {
       if (prev.includes(folderName)) {
-        return prev.filter(item => item !== folderName)
+        return prev.filter((item) => item !== folderName);
       } else {
-        return [...prev, folderName]
+        return [...prev, folderName];
       }
-    })
+    });
 
-    setSelectedFiles(prev => {
-      const newSelectedFiles = { ...prev }
-      const folder = data.find(item => item["Folder Name"] === folderName)
+    setSelectedFiles((prev) => {
+      const newSelectedFiles = { ...prev };
+      const folder = data.find((item) => item["Folder Name"] === folderName);
       if (folder) {
         if (prev[folderName]?.length === folder.Files.length) {
-          delete newSelectedFiles[folderName]
+          delete newSelectedFiles[folderName];
         } else {
-          newSelectedFiles[folderName] = folder.Files.map(file => file["File Name"])
+          newSelectedFiles[folderName] = folder.Files.map(
+            (file) => file["File Name"]
+          );
         }
       }
-      return newSelectedFiles
-    })
-  }
+      return newSelectedFiles;
+    });
+  };
 
   const handleFileCheckboxChange = (folderName: string, fileName: string) => {
-    setSelectedFiles(prev => {
-      const newSelectedFiles = { ...prev }
+    setSelectedFiles((prev) => {
+      const newSelectedFiles = { ...prev };
       if (!newSelectedFiles[folderName]) {
-        newSelectedFiles[folderName] = []
+        newSelectedFiles[folderName] = [];
       }
       if (newSelectedFiles[folderName].includes(fileName)) {
-        newSelectedFiles[folderName] = newSelectedFiles[folderName].filter(f => f !== fileName)
+        newSelectedFiles[folderName] = newSelectedFiles[folderName].filter(
+          (f) => f !== fileName
+        );
       } else {
-        newSelectedFiles[folderName].push(fileName)
+        newSelectedFiles[folderName].push(fileName);
       }
       if (newSelectedFiles[folderName].length === 0) {
-        delete newSelectedFiles[folderName]
+        delete newSelectedFiles[folderName];
       }
-      return newSelectedFiles
-    })
+      return newSelectedFiles;
+    });
 
-    setSelectedItems(prev => {
-      const folder = data.find(item => item["Folder Name"] === folderName)
+    setSelectedItems((prev) => {
+      const folder = data.find((item) => item["Folder Name"] === folderName);
       if (folder) {
         if (selectedFiles[folderName]?.length === folder.Files.length - 1) {
-          return [...prev, folderName]
+          return [...prev, folderName];
         } else if (selectedFiles[folderName]?.length === 0) {
-          return prev.filter(item => item !== folderName)
+          return prev.filter((item) => item !== folderName);
         }
       }
-      return prev
-    })
-  }
+      return prev;
+    });
+  };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedItems(filteredData.map(item => item["Folder Name"]))
-      const newSelectedFiles: { [folderName: string]: string[] } = {}
-      filteredData.forEach(folder => {
-        newSelectedFiles[folder["Folder Name"]] = folder.Files.map(file => file["File Name"])
-      })
-      setSelectedFiles(newSelectedFiles)
+      setSelectedItems(filteredData.map((item) => item["Folder Name"]));
+      const newSelectedFiles: { [folderName: string]: string[] } = {};
+      filteredData.forEach((folder) => {
+        newSelectedFiles[folder["Folder Name"]] = folder.Files.map(
+          (file) => file["File Name"]
+        );
+      });
+      setSelectedFiles(newSelectedFiles);
     } else {
-      setSelectedItems([])
-      setSelectedFiles({})
+      setSelectedItems([]);
+      setSelectedFiles({});
     }
-  }
+  };
 
   const handleDownload = (url: string) => {
-    window.open(url, '_blank')
-  }
+    window.open(url, "_blank");
+  };
 
   const handleFilterChange = (filterType: keyof Filters, value: string) => {
-    setFilters(prev => {
-      const currentFilter = prev[filterType]
-      let updatedFilter: string[]
+    setFilters((prev) => {
+      const currentFilter = prev[filterType];
+      let updatedFilter: string[];
 
-      if (value === 'all') {
-        updatedFilter = currentFilter.length === uniqueValues[filterType].length ? [] : uniqueValues[filterType].map(String);
+      if (value === "all") {
+        updatedFilter =
+          currentFilter.length === uniqueValues[filterType].length
+            ? []
+            : uniqueValues[filterType].map(String);
       } else {
         updatedFilter = currentFilter.includes(value)
-          ? currentFilter.filter(item => item !== value)
+          ? currentFilter.filter((item) => item !== value)
           : [...currentFilter, value];
       }
 
-      return { ...prev, [filterType]: updatedFilter }
-    })
-  }
+      return { ...prev, [filterType]: updatedFilter };
+    });
+  };
 
   const filteredData = useMemo(() => {
-    const sortedData = data.filter(item => 
-      (filters.horizontalConfiguration.length === 0 || filters.horizontalConfiguration.includes(item["Horizontal Configuration"])) &&
-      (filters.verticalConfiguration.length === 0 || filters.verticalConfiguration.includes(item["Vertical Configuration"])) &&
-      (filters.windDirection.length === 0 || filters.windDirection.includes(item["Wind Direction"])) &&
-      (filters.areaDensity.length === 0 || filters.areaDensity.includes(item["Area Density"])) &&
-      item["Folder Name"].toLowerCase().includes(searchTerm.toLowerCase())
+    const sortedData = data.filter(
+      (item) =>
+        (filters.horizontalConfiguration.length === 0 ||
+          filters.horizontalConfiguration.includes(
+            item["Horizontal Configuration"]
+          )) &&
+        (filters.verticalConfiguration.length === 0 ||
+          filters.verticalConfiguration.includes(
+            item["Vertical Configuration"]
+          )) &&
+        (filters.windDirection.length === 0 ||
+          filters.windDirection.includes(item["Wind Direction"])) &&
+        (filters.areaDensity.length === 0 ||
+          filters.areaDensity.includes(item["Area Density"])) &&
+        item["Folder Name"].toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     if (sortConfig !== null) {
       sortedData.sort((a, b) => {
-        if (a[sortConfig.key as keyof FolderItem] < b[sortConfig.key as keyof FolderItem]) {
-          return sortConfig.direction === 'ascending' ? -1 : 1;
+        if (
+          a[sortConfig.key as keyof FolderItem] <
+          b[sortConfig.key as keyof FolderItem]
+        ) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
         }
-        if (a[sortConfig.key as keyof FolderItem] > b[sortConfig.key as keyof FolderItem]) {
-          return sortConfig.direction === 'ascending' ? 1 : -1;
+        if (
+          a[sortConfig.key as keyof FolderItem] >
+          b[sortConfig.key as keyof FolderItem]
+        ) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
         }
         return 0;
       });
     }
 
     return sortedData;
-  }, [data, filters, searchTerm, sortConfig])
+  }, [data, filters, searchTerm, sortConfig]);
 
-  const uniqueValues = useMemo(() => ({
-    horizontalConfiguration: Array.from(new Set(data.map(item => item["Horizontal Configuration"]))),
-    verticalConfiguration: Array.from(new Set(data.map(item => item["Vertical Configuration"]))),
-    windDirection: Array.from(new Set(data.map(item => item["Wind Direction"]))),
-    areaDensity: Array.from(new Set(data.map(item => item["Area Density"])))
-  }), [data])
+  const uniqueValues = useMemo(
+    () => ({
+      horizontalConfiguration: Array.from(
+        new Set(data.map((item) => item["Horizontal Configuration"]))
+      ),
+      verticalConfiguration: Array.from(
+        new Set(data.map((item) => item["Vertical Configuration"]))
+      ),
+      windDirection: Array.from(
+        new Set(data.map((item) => item["Wind Direction"]))
+      ),
+      areaDensity: Array.from(
+        new Set(data.map((item) => item["Area Density"]))
+      ),
+    }),
+    [data]
+  );
 
   // const selectedItemsData = useMemo(() => {
   //   return data.filter(item => selectedItems.includes(item["Folder Name"]))
   // }, [data, selectedItems])
 
   const totalSelectedSize = useMemo(() => {
-    return Object.entries(selectedFiles).reduce((total, [folderName, fileNames]) => {
-      const folder = data.find(item => item["Folder Name"] === folderName)
-      if (folder) {
-        return total + fileNames.reduce((folderTotal, fileName) => {
-          const file = folder.Files.find(f => f["File Name"] === fileName)
-          return folderTotal + (file ? file["Size (MB)"] : 0)
-        }, 0)
-      }
-      return total
-    }, 0).toFixed(2)
-  }, [data, selectedFiles])
+    return Object.entries(selectedFiles)
+      .reduce((total, [folderName, fileNames]) => {
+        const folder = data.find((item) => item["Folder Name"] === folderName);
+        if (folder) {
+          return (
+            total +
+            fileNames.reduce((folderTotal, fileName) => {
+              const file = folder.Files.find(
+                (f) => f["File Name"] === fileName
+              );
+              return folderTotal + (file ? file["Size (MB)"] : 0);
+            }, 0)
+          );
+        }
+        return total;
+      }, 0)
+      .toFixed(2);
+  }, [data, selectedFiles]);
 
   const handleDownloadSelected = async () => {
     let downloadCount = 0;
     for (const [folderName, fileNames] of Object.entries(selectedFiles)) {
-      const folder = data.find(item => item["Folder Name"] === folderName);
+      const folder = data.find((item) => item["Folder Name"] === folderName);
       if (folder) {
         for (const fileName of fileNames) {
-          const file = folder.Files.find(f => f["File Name"] === fileName);
+          const file = folder.Files.find((f) => f["File Name"] === fileName);
           if (file) {
-            window.open(file["Direct Download Link"], '_blank');
+            window.open(file["Direct Download Link"], "_blank");
             downloadCount++;
           }
         }
@@ -234,78 +297,176 @@ export default function DataTable() {
   };
 
   const toggleFilter = (filterType: keyof Filters) => {
-    setOpenFilters(prev => ({ ...prev, [filterType]: !prev[filterType] }))
-  }
+    setOpenFilters((prev) => ({ ...prev, [filterType]: !prev[filterType] }));
+  };
 
   const toggleFolderExpansion = (folderName: string) => {
-    setExpandedFolders(prev => 
-      prev.includes(folderName) ? prev.filter(name => name !== folderName) : [...prev, folderName]
-    )
-  }
+    setExpandedFolders((prev) =>
+      prev.includes(folderName)
+        ? prev.filter((name) => name !== folderName)
+        : [...prev, folderName]
+    );
+  };
 
   const handleSort = (key: string) => {
-    let direction: 'ascending' | 'descending' = 'ascending';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
+    let direction: "ascending" | "descending" = "ascending";
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === "ascending"
+    ) {
+      direction = "descending";
     }
     setSortConfig({ key, direction });
   };
 
   const isFileSelected = (folderName: string, fileName: string) => {
-    return selectedFiles[folderName]?.includes(fileName) || false
-  }
+    return selectedFiles[folderName]?.includes(fileName) || false;
+  };
 
   const isFolderSelected = (folderName: string) => {
-    const folder = data.find(item => item["Folder Name"] === folderName)
-    return folder ? selectedFiles[folderName]?.length === folder.Files.length : false
-  }
+    const folder = data.find((item) => item["Folder Name"] === folderName);
+    return folder
+      ? selectedFiles[folderName]?.length === folder.Files.length
+      : false;
+  };
 
-  if (loading) return <div>Loading...</div>
-  if (error) return <div>Error: {error}</div>
+  if (loading)
+    return (
+      <div className="pt-6 pb-8">
+        <LoadingSpinner size="md" />
+      </div>
+    );
+  if (error) return <div>Error: {error}</div>;
   return (
     <div className="container mx-auto pt-8">
-      <h1 className="text-2xl font-bold mb-6 text-left">Idealized Building Blocks Cases Download</h1>
+      <h1 className="text-2xl font-bold mb-6 text-left">
+        Idealized Building Blocks Cases Download
+      </h1>
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="lg:w-1/5">
-          <h2 className="text-lg font-bold mb-4 border-b border-gray-300 pb-4 pt-2">Filters</h2>
+          <h2 className="text-lg font-bold mb-4 border-b border-gray-300 pb-4 pt-2">
+            Filters
+          </h2>
           <div className="space-y-4">
             {Object.entries(filters).map(([key, selectedValues]) => (
-              <Collapsible key={key} open={openFilters[key]} onOpenChange={() => toggleFilter(key as keyof Filters)}>
+              <Collapsible
+                key={key}
+                open={openFilters[key]}
+                onOpenChange={() => toggleFilter(key as keyof Filters)}
+              >
                 <div className="flex items-center justify-between">
-                  <Label htmlFor={`${key}-filter`} className="text-base font-large">
-                    {key === 'horizontalConfiguration' ? 'Horizontal Configuration' :
-                     key === 'verticalConfiguration' ? 'Vertical Configuration' :
-                     key === 'windDirection' ? 'Wind Direction' :
-                     key === 'areaDensity' ? 'Area Density' : key}
+                  <Label
+                    htmlFor={`${key}-filter`}
+                    className="text-base font-large"
+                  >
+                    {key === "horizontalConfiguration"
+                      ? "Horizontal Configuration"
+                      : key === "verticalConfiguration"
+                      ? "Vertical Configuration"
+                      : key === "windDirection"
+                      ? "Wind Direction"
+                      : key === "areaDensity"
+                      ? "Area Density"
+                      : key}
                   </Label>
+                  <Popup
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="p-0 text-gray-400 hover:text-gray-600 "
+                      >
+                        <Info className="h-4 w-4" />
+                      </Button>
+                    }
+                    content={
+                      <div className="max-w-xs">
+                        {key === "horizontalConfiguration" ? (
+                          <div className="text-gray-500 size-sm">
+                            <p>
+                              <strong>Aligned:</strong> Scenarios featuring a
+                              single, uninterrupted street aligned parallel to
+                              the prevailing wind direction, simulating an
+                              extreme case of urban layouts.
+                            </p>
+                            <p>
+                              <strong>Staggered:</strong> Scenarios that avoid
+                              the presence of major wind-aligned corridors,
+                              which can artificially reduce building drag and
+                              are often employed to calibrate urban canopy
+                              models (UCM).
+                            </p>
+                          </div>
+                        ) : key === "verticalConfiguration" ? (
+                          <p className="text-gray-500 size-sm">
+                            Vertical Configuration is reflected by the standard
+                            deviation of building height distribution
+                          </p>
+                        ) : key === "windDirection" ? (
+                          <p className="text-gray-500 size-sm">
+                      Wind Direction is the approaching angle to the urban
+                          </p>
+                        ) : key === "areaDensity" ? (
+                          <p className="text-gray-500 size-sm">
+                      Area Density is the ratio of total building footprint to the whole neighborhood area.
+                          </p>
+                        ) : (
+                          "Information about this filter"
+                        )}
+                      </div>
+                    }
+                  />
                   <CollapsibleTrigger asChild>
                     <Button variant="ghost" size="sm">
-                      {openFilters[key] ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      {openFilters[key] ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
                     </Button>
                   </CollapsibleTrigger>
                 </div>
+
                 <CollapsibleContent className="mt-2">
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id={`${key}-all`}
-                        checked={selectedValues.length === uniqueValues[key as keyof typeof uniqueValues].length}
-                        onCheckedChange={() => handleFilterChange(key as keyof Filters, 'all')}
+                        checked={
+                          selectedValues.length ===
+                          uniqueValues[key as keyof typeof uniqueValues].length
+                        }
+                        onCheckedChange={() =>
+                          handleFilterChange(key as keyof Filters, "all")
+                        }
                       />
-                      <Label htmlFor={`${key}-all`} className='text-md'>All</Label>
+                      <Label htmlFor={`${key}-all`} className="text-md">
+                        All
+                      </Label>
                     </div>
-                    {uniqueValues[key as keyof typeof uniqueValues].map(value => (
-                      <div key={value} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`${key}-${value}`}
-                          checked={selectedValues.includes(value)}
-                          onCheckedChange={() => handleFilterChange(key as keyof Filters, value)}
-                        />
-                        <Label className='font-normal text-md' htmlFor={`${key}-${value}`}>
-                          {value}
-                        </Label>
-                      </div>
-                    ))}
+                    {uniqueValues[key as keyof typeof uniqueValues].map(
+                      (value) => (
+                        <div
+                          key={value}
+                          className="flex items-center space-x-2"
+                        >
+                          <Checkbox
+                            id={`${key}-${value}`}
+                            checked={selectedValues.includes(value)}
+                            onCheckedChange={() =>
+                              handleFilterChange(key as keyof Filters, value)
+                            }
+                          />
+                          <Label
+                            className="font-normal text-md"
+                            htmlFor={`${key}-${value}`}
+                          >
+                            {value}
+                          </Label>
+                        </div>
+                      )
+                    )}
                   </div>
                 </CollapsibleContent>
               </Collapsible>
@@ -339,35 +500,52 @@ export default function DataTable() {
                   <TableHead className="w-[50px]">
                     <Checkbox
                       checked={selectedItems.length === filteredData.length}
-                      onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+                      onCheckedChange={(checked) =>
+                        handleSelectAll(checked as boolean)
+                      }
                     />
                   </TableHead>
                   <TableHead className="font-bold w-40">
-                    <Button variant="ghost" onClick={() => handleSort("Folder Name")}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort("Folder Name")}
+                    >
                       Folder Name
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
                   <TableHead className="w-24">
-                    <Button variant="ghost" onClick={() => handleSort("Horizontal Configuration")}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort("Horizontal Configuration")}
+                    >
                       Horizontal Config
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
                   <TableHead className="w-24">
-                    <Button variant="ghost" onClick={() => handleSort("Vertical Config")} >
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort("Vertical Config")}
+                    >
                       Vertical Config
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
                   <TableHead className="w-32">
-                    <Button variant="ghost" onClick={() => handleSort("Wind Direction")}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort("Wind Direction")}
+                    >
                       Wind Direction
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
                   <TableHead className="w-32">
-                    <Button variant="ghost" onClick={() => handleSort("Area Density")}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort("Area Density")}
+                    >
                       Area Density
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
@@ -382,14 +560,18 @@ export default function DataTable() {
                       <TableCell>
                         <Checkbox
                           checked={isFolderSelected(folder["Folder Name"])}
-                          onCheckedChange={() => handleFolderCheckboxChange(folder["Folder Name"])}
+                          onCheckedChange={() =>
+                            handleFolderCheckboxChange(folder["Folder Name"])
+                          }
                         />
                       </TableCell>
                       <TableCell className="font-bold">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => toggleFolderExpansion(folder["Folder Name"])}
+                          onClick={() =>
+                            toggleFolderExpansion(folder["Folder Name"])
+                          }
                         >
                           {expandedFolders.includes(folder["Folder Name"]) ? (
                             <ChevronDown className="h-4 w-4 mr-2" />
@@ -404,7 +586,9 @@ export default function DataTable() {
                         {/* <div>{folder["Horizontal Configuration"].split(' ')[1]}</div> */}
                       </TableCell>
                       <TableCell className="text-xs">
-                        <div>{Number(folder["Vertical Config"]).toFixed(2)}</div>
+                        <div>
+                          {Number(folder["Vertical Config"]).toFixed(2)}
+                        </div>
                       </TableCell>
                       <TableCell>{folder["Wind Direction"]}</TableCell>
                       <TableCell>{folder["Area Density"]}</TableCell>
@@ -412,7 +596,11 @@ export default function DataTable() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => folder.Files.forEach(file => handleDownload(file["Direct Download Link"]))}
+                          onClick={() =>
+                            folder.Files.forEach((file) =>
+                              handleDownload(file["Direct Download Link"])
+                            )
+                          }
                           className="text-xs px-2 py-1"
                         >
                           <Download className="h-3 w-3 mr-1" />
@@ -436,8 +624,16 @@ export default function DataTable() {
                                 <TableRow key={file["File Name"]}>
                                   <TableCell>
                                     <Checkbox
-                                      checked={isFileSelected(folder["Folder Name"], file["File Name"])}
-                                      onCheckedChange={() => handleFileCheckboxChange(folder["Folder Name"], file["File Name"])}
+                                      checked={isFileSelected(
+                                        folder["Folder Name"],
+                                        file["File Name"]
+                                      )}
+                                      onCheckedChange={() =>
+                                        handleFileCheckboxChange(
+                                          folder["Folder Name"],
+                                          file["File Name"]
+                                        )
+                                      }
                                     />
                                   </TableCell>
                                   <TableCell>{file["File Name"]}</TableCell>
@@ -446,7 +642,11 @@ export default function DataTable() {
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      onClick={() => handleDownload(file["Direct Download Link"])}
+                                      onClick={() =>
+                                        handleDownload(
+                                          file["Direct Download Link"]
+                                        )
+                                      }
                                     >
                                       <Download className="h-4 w-4" />
                                     </Button>
@@ -464,7 +664,8 @@ export default function DataTable() {
             </Table>
             <div className="mt-4 flex justify-between items-center p-4">
               <p className="text-md text-gray-600">
-                Selected: {Object.values(selectedFiles).flat().length} files (Total size: {totalSelectedSize} MB)
+                Selected: {Object.values(selectedFiles).flat().length} files
+                (Total size: {totalSelectedSize} MB)
               </p>
               <Button
                 onClick={handleDownloadSelected}
@@ -478,6 +679,5 @@ export default function DataTable() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-
