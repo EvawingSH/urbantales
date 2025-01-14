@@ -33,6 +33,10 @@ export function Footer() {
                 </a>
           </div>
         </nav>
+        <div className="w-full px-4 mt-6 text-sm text-gray-500 text-center">
+          <p>All data uploaded are under a non-restrictive license - CC BY 4.0
+          Users must cite the original paper (Nazarian et al., (2025)) when using the data.</p>
+        </div>
       </div>
     </footer>
   )

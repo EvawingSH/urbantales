@@ -28,10 +28,10 @@ interface FolderItem {
   Config: string;
   "Country": string;
   "City": string;
-  "Vertical Configuration": string;
-  "Vertical Config": string;
+  "Standard Deviation of Building Height": string;
+  "Std of Building Height": string;
   "Wind Direction": string;
-  "Area Density": string;
+  "Plan Area Density": string;
   Files: FileItem[];
 }
 
@@ -181,9 +181,9 @@ export default function DataTable() {
     let sortedData = data.filter(item => 
       (filters.Country.length === 0 || filters.Country.includes(item["Country"])) &&
       (filters.City.length === 0 || filters.City.includes(item["City"])) &&
-      (filters.verticalConfiguration.length === 0 || filters.verticalConfiguration.includes(item["Vertical Configuration"])) &&
+      (filters.verticalConfiguration.length === 0 || filters.verticalConfiguration.includes(item["Standard Deviation of Building Height"])) &&
       (filters.windDirection.length === 0 || filters.windDirection.includes(item["Wind Direction"])) &&
-      (filters.areaDensity.length === 0 || filters.areaDensity.includes(item["Area Density"])) &&
+      (filters.areaDensity.length === 0 || filters.areaDensity.includes(item["Plan Area Density"])) &&
       item["Folder Name"].toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -223,9 +223,9 @@ export default function DataTable() {
     return {
       Country: Array.from(countriesSet),
       City: Array.from(new Set(filteredData.map(item => item["City"]))),
-      verticalConfiguration: sortStrings(Array.from(new Set(data.map(item => item["Vertical Configuration"])))),
+      verticalConfiguration: sortStrings(Array.from(new Set(data.map(item => item["Standard Deviation of Building Height"])))),
       windDirection: sortNumbers(Array.from(new Set(data.map(item => item["Wind Direction"])))),
-      areaDensity: Array.from(new Set(data.map(item => item["Area Density"])))
+      areaDensity: Array.from(new Set(data.map(item => item["Plan Area Density"])))
     };
   }, [data, filters.Country]);
   
@@ -312,9 +312,15 @@ export default function DataTable() {
                   <Label htmlFor={`${key}-filter`} className="text-base font-large">
                     {key === 'Country' ? 'Country' :
                     key === 'City' ? 'City' :
-                     key === 'verticalConfiguration' ? "Vertical Configuration" :
-                     key === 'windDirection' ? 'Wind Direction' :
-                     key === 'areaDensity' ? 'Area Density' : key}
+                     key === 'verticalConfiguration' ?
+                     (
+                      <>
+                        Standard Deviation of <br />  Building Height (m)
+                      </>
+                    )
+                     :
+                     key === 'windDirection' ? 'Wind Direction (deg)' :
+                     key === 'areaDensity' ? 'Plan Area Density' : key}
                   </Label>
                   <Popup
                     trigger={
@@ -346,8 +352,7 @@ export default function DataTable() {
                           </div>
                         ) : key === "verticalConfiguration" ? (
                           <p className="text-gray-500 size-sm">
-                            Vertical Configuration is reflected by the standard
-                            deviation of building height distribution
+                            Standard Deviation of Building Height is refering to the building height distrubution for the neighbourhoods.
                           </p>
                         ) : key === "windDirection" ? (
                           <p className="text-gray-500 size-sm">
@@ -355,7 +360,7 @@ export default function DataTable() {
                           </p>
                         ) : key === "areaDensity" ? (
                           <p className="text-gray-500 size-sm">
-                      Area Density is the ratio of total building footprint to the whole neighborhood area.
+                      Plan Area Density is the ratio of total building footprint to the whole neighborhood area.
                           </p>
                         ) 
                         : (
@@ -429,13 +434,13 @@ export default function DataTable() {
                       onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
                     />
                   </TableHead>
-                  <TableHead className="font-bold w-20">
+                  <TableHead className="font-bold w-15">
                     <Button variant="ghost" onClick={() => handleSort("Folder Name")}>
                       Folder Name
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
-                  <TableHead className="w-20">
+                  <TableHead className="w-15">
                     <Button variant="ghost" onClick={() => handleSort("Country")}>
                       Country
                       <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -448,20 +453,21 @@ export default function DataTable() {
                     </Button>
                   </TableHead>
                   <TableHead className="w-20">
-                    <Button variant="ghost" onClick={() => handleSort("Vertical Config")} >
-                      Vertical Config
+                    <Button variant="ghost" onClick={() => handleSort("Std of Building Height")} >
+                      Std of <br/>
+                      Building Height (m)
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
                   <TableHead className="w-25">
                     <Button variant="ghost" onClick={() => handleSort("Wind Direction")}>
-                      Wind Direction
+                      Wind Direction <br/> (deg)
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
                   <TableHead className="w-25">
                     <Button variant="ghost" onClick={() => handleSort("Area Density")}>
-                      Area Density
+                      Plan <br/> Area Density
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
@@ -478,7 +484,7 @@ export default function DataTable() {
                           onCheckedChange={() => handleFolderCheckboxChange(folder["Folder Name"])}
                         />
                       </TableCell>
-                      <TableCell className="font-bold">
+                      <TableCell className="font-bold w-20">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -492,13 +498,13 @@ export default function DataTable() {
                           {folder["Folder Name"]}
                         </Button>
                       </TableCell>
-                      <TableCell className="text-xs">{folder["Country"]}</TableCell>
-                      <TableCell className="text-xs">{folder["City"]}</TableCell>
-                      <TableCell className="text-xs">
-                        <div>{Number(folder["Vertical Config"]).toFixed(2)}</div>
+                      <TableCell className="text-xs w-15">{folder["Country"]}</TableCell>
+                      <TableCell className="text-xs w-20">{folder["City"]}</TableCell>
+                      <TableCell className="text-xs w-20">
+                        <div>{Number(folder["Std of Building Height"]).toFixed(2)}</div>
                       </TableCell>
                       <TableCell>{folder["Wind Direction"]}</TableCell>
-                      <TableCell>{folder["Area Density"]}</TableCell>
+                      <TableCell>{folder["Plan Area Density"]}</TableCell>
                       <TableCell>
                         <Button
                           variant="outline"

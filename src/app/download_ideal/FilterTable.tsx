@@ -40,10 +40,10 @@ interface FolderItem {
   "Folder Name": string;
   Config: string;
   "Horizontal Configuration": string;
-  "Vertical Configuration": string;
-  "Vertical Config": string;
+  "Standard Deviation of Building Height": string;
+  "Std of Building Height": string;
   "Wind Direction": string;
-  "Area Density": string;
+  "Plan Area Density": string;
   Files: FileItem[];
 }
 
@@ -204,12 +204,12 @@ export default function DataTable() {
           )) &&
         (filters.verticalConfiguration.length === 0 ||
           filters.verticalConfiguration.includes(
-            item["Vertical Configuration"]
+            item["Standard Deviation of Building Height"]
           )) &&
         (filters.windDirection.length === 0 ||
           filters.windDirection.includes(item["Wind Direction"])) &&
         (filters.areaDensity.length === 0 ||
-          filters.areaDensity.includes(item["Area Density"])) &&
+          filters.areaDensity.includes(item["Plan Area Density"])) &&
         item["Folder Name"].toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -240,13 +240,13 @@ export default function DataTable() {
         new Set(data.map((item) => item["Horizontal Configuration"]))
       ),
       verticalConfiguration: Array.from(
-        new Set(data.map((item) => item["Vertical Configuration"]))
+        new Set(data.map((item) => item["Standard Deviation of Building Height"]))
       ),
       windDirection: Array.from(
         new Set(data.map((item) => item["Wind Direction"]))
       ),
       areaDensity: Array.from(
-        new Set(data.map((item) => item["Area Density"]))
+        new Set(data.map((item) => item["Plan Area Density"]))
       ),
     }),
     [data]
@@ -363,11 +363,14 @@ export default function DataTable() {
                     {key === "horizontalConfiguration"
                       ? "Horizontal Configuration"
                       : key === "verticalConfiguration"
-                      ? "Vertical Configuration"
+                      ? 
+                      (
+                        <>Standard Deviation of <br/>Building Height (m)
+                        </>)
                       : key === "windDirection"
-                      ? "Wind Direction"
+                      ? "Wind Direction (deg)"
                       : key === "areaDensity"
-                      ? "Area Density"
+                      ? "Plan Area Density"
                       : key}
                   </Label>
                   <Popup
@@ -400,8 +403,7 @@ export default function DataTable() {
                           </div>
                         ) : key === "verticalConfiguration" ? (
                           <p className="text-gray-500 size-sm">
-                            Vertical Configuration is reflected by the standard
-                            deviation of building height distribution
+                            Standard Deviation of Building Height is refering to the building height distrubution for the building blocks.
                           </p>
                         ) : key === "windDirection" ? (
                           <p className="text-gray-500 size-sm">
@@ -409,7 +411,7 @@ export default function DataTable() {
                           </p>
                         ) : key === "areaDensity" ? (
                           <p className="text-gray-500 size-sm">
-                      Area Density is the ratio of total building footprint to the whole neighborhood area.
+                      Plan Area Density is the ratio of total building footprint to the whole neighborhood area.
                           </p>
                         ) : (
                           "Information about this filter"
@@ -526,9 +528,9 @@ export default function DataTable() {
                   <TableHead className="w-24">
                     <Button
                       variant="ghost"
-                      onClick={() => handleSort("Vertical Config")}
+                      onClick={() => handleSort("Std of Building Height")}
                     >
-                      Vertical Config
+                      Std of <br/>Building Height (m)
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
@@ -537,16 +539,16 @@ export default function DataTable() {
                       variant="ghost"
                       onClick={() => handleSort("Wind Direction")}
                     >
-                      Wind Direction
+                      Wind Direction <br/> (deg)
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
                   <TableHead className="w-32">
                     <Button
                       variant="ghost"
-                      onClick={() => handleSort("Area Density")}
+                      onClick={() => handleSort("Plan Area Density")}
                     >
-                      Area Density
+                      Plan <br/>Area Density
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
@@ -587,11 +589,11 @@ export default function DataTable() {
                       </TableCell>
                       <TableCell className="text-xs">
                         <div>
-                          {Number(folder["Vertical Config"]).toFixed(2)}
+                          {Number(folder["Std of Building Height"]).toFixed(2)}
                         </div>
                       </TableCell>
                       <TableCell>{folder["Wind Direction"]}</TableCell>
-                      <TableCell>{folder["Area Density"]}</TableCell>
+                      <TableCell>{folder["Plan Area Density"]}</TableCell>
                       <TableCell>
                         <Button
                           variant="outline"

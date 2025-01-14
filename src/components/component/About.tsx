@@ -39,15 +39,15 @@ const teamMembers = [
     image: "/sk.jpg?height=200&width=200",
   },
   {
-    name: "Dr.Lewis Blunn",
+    name: "Dr. Lewis Blunn",
     role: "Researcher",
     email: "lewis.blunn@metoffice.gov.uk",
     image: "/lb.jpg?height=200&width=200",
   },
   {
-    name: "Prof. Alberto Martili",
+    name: "Prof. Alberto Martilli",
     role: "Researcher",
-    email: "alberto.martili@ciemat.es",
+    email: "alberto.martilli@ciemat.es",
     image: "/am.jpg?height=200&width=200",
   },
 ];

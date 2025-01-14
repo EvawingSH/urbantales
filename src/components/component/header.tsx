@@ -21,6 +21,12 @@ export function Header() {
               Home
             </Link>
             <Link 
+              href="/About" 
+              className="text-gray-600 font-semibold hover:text-gray-800 nav-link"
+            >
+              About
+            </Link>
+            <Link 
               href="/download_ideal" 
               className="text-gray-600 font-semibold hover:text-gray-800 nav-link"
             >
@@ -31,12 +37,6 @@ export function Header() {
               className="text-gray-600 font-semibold hover:text-gray-800 nav-link"
             >
               Realistic urban neighbourhoods
-            </Link>
-            <Link 
-              href="/About" 
-              className="text-gray-600 font-semibold hover:text-gray-800 nav-link"
-            >
-              About
             </Link>
           </nav>
           <div className="flex items-center space-x-2">
@@ -86,6 +86,12 @@ export function Header() {
                 Home
               </Link>
               <Link 
+                href="/About" 
+                className="block text-gray-600 font-semibold hover:text-gray-800 nav-link-mobile"
+              >
+                About
+              </Link>
+              <Link 
                 href="/download_ideal" 
                 className="block text-gray-600 font-semibold hover:text-gray-800 nav-link-mobile"
               >
@@ -98,12 +104,7 @@ export function Header() {
                 Realistic urban neighbourhoods
               </Link>
           
-              <Link 
-                href="/About" 
-                className="block text-gray-600 font-semibold hover:text-gray-800 nav-link-mobile"
-              >
-                About
-              </Link>
+
             </nav>
           </div>
         </div>
