@@ -46,6 +46,7 @@ interface FolderItem {
   "Std of Building Height": string;
   "Wind Direction": string;
   "Plan Area Density": string;
+  "Direct Download Link": string;
   Files: FileItem[];
 }
 
@@ -649,12 +650,12 @@ export default function DataTable() {
                       <TableCell>{folder["Wind Direction"]}</TableCell>
                       <TableCell>{folder["Plan Area Density"]}</TableCell>
                       <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleDownloadSelected}
-                          className="text-xs px-2 py-1"
-                        >
+                     <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => folder.Files.forEach((file) => handleDownload(file["Direct Download Link"]))}
+                           className="text-xs px-2 py-1"
+                         >
                           <Download className="h-3 w-3 mr-1" />
                         </Button>
                       </TableCell>

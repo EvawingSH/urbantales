@@ -31,6 +31,7 @@ interface FolderItem {
   "Wind Direction": string
   "Plan Area Density": string
   Files: FileItem[]
+  "Direct Download Link": string
 }
 
 interface Filters {
@@ -550,9 +551,9 @@ export default function DataTable() {
                       <Button
                           variant="outline"
                           size="sm"
-                          onClick={handleDownloadSelected}
+                          onClick={() => folder.Files.forEach((file) => handleDownload(file["Direct Download Link"]))}
                           className="text-xs px-2 py-1"
-                      >
+                        >
                           <Download className="h-3 w-3 mr-1" />
                       </Button>
                       </TableCell>
