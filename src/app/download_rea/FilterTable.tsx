@@ -1,6 +1,6 @@
-'use client'
+"use client"
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
@@ -8,39 +8,80 @@ import { Download, Search, ChevronDown, ChevronRight, ArrowUpDown } from 'lucide
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import {LoadingSpinner} from "@/components/component/loadingSpinner"
-import {Popup} from '@/components/component/Popup'
-import {Info} from 'lucide-react'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { LoadingSpinner } from "@/components/component/loadingSpinner"
+import { Popup } from "@/components/component/Popup"
+import { Info } from 'lucide-react'
+import JSZip from "jszip"
+import { saveAs } from "file-saver"
 
 interface FileItem {
-  "File Name": string;
-  "Direct Download Link": string;
-  "Size (MB)": number;
+  "File Name": string
+  "Direct Download Link": string
+  "Size (MB)": number
 }
 
 interface FolderItem {
-  "Folder Name": string;
-  Config: string;
-  "Country": string;
-  "City": string;
-  "Standard Deviation of Building Height": string;
-  "Std of Building Height": string;
-  "Wind Direction": string;
-  "Plan Area Density": string;
-  Files: FileItem[];
+  "Folder Name": string
+  Config: string
+  Country: string
+  City: string
+  "Standard Deviation of Building Height": string
+  "Std of Building Height": string
+  "Wind Direction": string
+  "Plan Area Density": string
+  Files: FileItem[]
 }
 
 interface Filters {
-  Country: string[];
-  City: string[];
-  verticalConfiguration: string[];
-  windDirection: string[];
-  areaDensity: string[];
+  Country: string[]
+  City: string[]
+  verticalConfiguration: string[]
+  windDirection: string[]
+  areaDensity: string[]
+}
+
+async function zipAndDownloadFiles(files: { url: string; name: string }[]) {
+  const zip = new JSZip()
+
+  for (const file of files) {
+    try {
+      console.log('Fetching file:', file.name, 'from URL:', file.url) // Log file details
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent(file.url)}`
+      const response = await fetch(proxyUrl)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+      }
+
+      const blob = await response.blob()
+      zip.file(file.name, blob)
+    } catch (error) {
+      console.error(`Error fetching file ${file.name}:`, error)
+      toast({
+        title: "Download Error",
+        description: `Failed to download ${file.name}. Error: ${(error as Error).message}`,
+        variant: "destructive",
+      })
+    }
+  }
+
+  try {
+    const content = await zip.generateAsync({ type: "blob" })
+    saveAs(content, "selected_files.zip")
+    toast({
+      title: "Download Complete",
+      description: `Successfully zipped and downloaded ${files.length} files.`,
+    })
+  } catch (error) {
+    console.error("Error creating zip file:", error)
+    toast({
+      title: "Zip Creation Failed",
+      description: `An error occurred while creating the zip file. Error: ${(error as Error).message}`,
+      variant: "destructive",
+    })
+  }
 }
 
 export default function DataTable() {
@@ -51,31 +92,31 @@ export default function DataTable() {
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filters>({
     Country: [],
-    City:[],
+    City: [],
     verticalConfiguration: [],
     windDirection: [],
-    areaDensity: []
+    areaDensity: [],
   })
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState("")
   const [openFilters, setOpenFilters] = useState<{ [key: string]: boolean }>({
     Country: false,
     City: false,
     verticalConfiguration: false,
     windDirection: false,
-    areaDensity: false
+    areaDensity: false,
   })
   const [expandedFolders, setExpandedFolders] = useState<string[]>([])
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'ascending' | 'descending' } | null>(null)
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "ascending" | "descending" } | null>(null)
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/metadata_rea')
+        const response = await fetch("/api/metadata_rea")
         const jsonData = await response.json()
         setData(jsonData)
       } catch (err) {
-        setError('Failed to load metadata')
+        setError("Failed to load metadata")
       } finally {
         setLoading(false)
       }
@@ -85,22 +126,22 @@ export default function DataTable() {
   }, [])
 
   const handleFolderCheckboxChange = (folderName: string) => {
-    setSelectedItems(prev => {
+    setSelectedItems((prev) => {
       if (prev.includes(folderName)) {
-        return prev.filter(item => item !== folderName)
+        return prev.filter((item) => item !== folderName)
       } else {
         return [...prev, folderName]
       }
     })
 
-    setSelectedFiles(prev => {
+    setSelectedFiles((prev) => {
       const newSelectedFiles = { ...prev }
-      const folder = data.find(item => item["Folder Name"] === folderName)
+      const folder = data.find((item) => item["Folder Name"] === folderName)
       if (folder) {
         if (prev[folderName]?.length === folder.Files.length) {
           delete newSelectedFiles[folderName]
         } else {
-          newSelectedFiles[folderName] = folder.Files.map(file => file["File Name"])
+          newSelectedFiles[folderName] = folder.Files.map((file) => file["File Name"])
         }
       }
       return newSelectedFiles
@@ -108,13 +149,13 @@ export default function DataTable() {
   }
 
   const handleFileCheckboxChange = (folderName: string, fileName: string) => {
-    setSelectedFiles(prev => {
+    setSelectedFiles((prev) => {
       const newSelectedFiles = { ...prev }
       if (!newSelectedFiles[folderName]) {
         newSelectedFiles[folderName] = []
       }
       if (newSelectedFiles[folderName].includes(fileName)) {
-        newSelectedFiles[folderName] = newSelectedFiles[folderName].filter(f => f !== fileName)
+        newSelectedFiles[folderName] = newSelectedFiles[folderName].filter((f) => f !== fileName)
       } else {
         newSelectedFiles[folderName].push(fileName)
       }
@@ -124,13 +165,13 @@ export default function DataTable() {
       return newSelectedFiles
     })
 
-    setSelectedItems(prev => {
-      const folder = data.find(item => item["Folder Name"] === folderName)
+    setSelectedItems((prev) => {
+      const folder = data.find((item) => item["Folder Name"] === folderName)
       if (folder) {
         if (selectedFiles[folderName]?.length === folder.Files.length - 1) {
           return [...prev, folderName]
         } else if (selectedFiles[folderName]?.length === 0) {
-          return prev.filter(item => item !== folderName)
+          return prev.filter((item) => item !== folderName)
         }
       }
       return prev
@@ -139,10 +180,10 @@ export default function DataTable() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedItems(filteredData.map(item => item["Folder Name"]))
+      setSelectedItems(filteredData.map((item) => item["Folder Name"]))
       const newSelectedFiles: { [folderName: string]: string[] } = {}
-      filteredData.forEach(folder => {
-        newSelectedFiles[folder["Folder Name"]] = folder.Files.map(file => file["File Name"])
+      filteredData.forEach((folder) => {
+        newSelectedFiles[folder["Folder Name"]] = folder.Files.map((file) => file["File Name"])
       })
       setSelectedFiles(newSelectedFiles)
     } else {
@@ -152,152 +193,194 @@ export default function DataTable() {
   }
 
   const handleDownload = (url: string) => {
-    window.open(url, '_blank')
+    window.open(url, "_blank")
   }
 
   const handleFilterChange = (filterType: keyof Filters, value: string) => {
-    setFilters(prev => {
-      const currentFilter = prev[filterType];
-      let updatedFilter: string[];
+    setFilters((prev) => {
+      const currentFilter = prev[filterType]
+      let updatedFilter: string[]
 
-      if (value === 'all') {
-        updatedFilter = currentFilter.length === uniqueValues[filterType].length ? [] : uniqueValues[filterType].map(String);
+      if (value === "all") {
+        updatedFilter =
+          currentFilter.length === uniqueValues[filterType].length ? [] : uniqueValues[filterType].map(String)
       } else {
         updatedFilter = currentFilter.includes(value)
-          ? currentFilter.filter(item => item !== value)
-          : [...currentFilter, value];
+          ? currentFilter.filter((item) => item !== value)
+          : [...currentFilter, value]
       }
       // console.log(filterType)
       // Reset City filter when Country filter changes
-      if (filterType === 'Country') {
-        return { ...prev, [filterType]: updatedFilter, City: [] };
+      if (filterType === "Country") {
+        return { ...prev, [filterType]: updatedFilter, City: [] }
       }
 
-      return { ...prev, [filterType]: updatedFilter };
-    });
-  };
+      return { ...prev, [filterType]: updatedFilter }
+    })
+  }
 
   const filteredData = useMemo(() => {
-    let sortedData = data.filter(item => 
-      (filters.Country.length === 0 || filters.Country.includes(item["Country"])) &&
-      (filters.City.length === 0 || filters.City.includes(item["City"])) &&
-      (filters.verticalConfiguration.length === 0 || filters.verticalConfiguration.includes(item["Standard Deviation of Building Height"])) &&
-      (filters.windDirection.length === 0 || filters.windDirection.includes(item["Wind Direction"])) &&
-      (filters.areaDensity.length === 0 || filters.areaDensity.includes(item["Plan Area Density"])) &&
-      item["Folder Name"].toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const sortedData = data.filter(
+      (item) =>
+        (filters.Country.length === 0 || filters.Country.includes(item["Country"])) &&
+        (filters.City.length === 0 || filters.City.includes(item["City"])) &&
+        (filters.verticalConfiguration.length === 0 ||
+          filters.verticalConfiguration.includes(item["Standard Deviation of Building Height"])) &&
+        (filters.windDirection.length === 0 || filters.windDirection.includes(item["Wind Direction"])) &&
+        (filters.areaDensity.length === 0 || filters.areaDensity.includes(item["Plan Area Density"])) &&
+        item["Folder Name"].toLowerCase().includes(searchTerm.toLowerCase()),
+    )
 
     if (sortConfig !== null) {
       sortedData.sort((a, b) => {
         if (a[sortConfig.key as keyof FolderItem] < b[sortConfig.key as keyof FolderItem]) {
-          return sortConfig.direction === 'ascending' ? -1 : 1;
+          return sortConfig.direction === "ascending" ? -1 : 1
         }
         if (a[sortConfig.key as keyof FolderItem] > b[sortConfig.key as keyof FolderItem]) {
-          return sortConfig.direction === 'ascending' ? 1 : -1;
+          return sortConfig.direction === "ascending" ? 1 : -1
         }
-        return 0;
-      });
+        return 0
+      })
     }
 
-    return sortedData;
+    return sortedData
   }, [data, filters, searchTerm, sortConfig])
 
   const uniqueValues = useMemo(() => {
-    const countriesSet = new Set(data.map(item => item["Country"]));
-    const filteredData = filters.Country.length > 0
-      ? data.filter(item => filters.Country.includes(item["Country"]))
-      : data;
-  
-    const sortStrings = (array: string[]) =>
-      array.sort((a, b) => a.localeCompare(b)); // For alphabetical sorting
-  
+    const countriesSet = new Set(data.map((item) => item["Country"]))
+    const filteredData =
+      filters.Country.length > 0 ? data.filter((item) => filters.Country.includes(item["Country"])) : data
+
+    const sortStrings = (array: string[]) => array.sort((a, b) => a.localeCompare(b)) // For alphabetical sorting
+
     const sortNumbers = (array: string[]) =>
       array
         .map((item) => (item === "" || item === null ? null : Number(item))) // Convert to number, handle empty/null
         .sort((a, b) => {
-          if (a === null) return 1; // Push null to the end
-          if (b === null) return -1; // Push null to the end
-          return a - b; // Numerical sorting
-        });
-  
+          if (a === null) return 1 // Push null to the end
+          if (b === null) return -1 // Push null to the end
+          return a - b // Numerical sorting
+        })
+
     return {
       Country: Array.from(countriesSet),
-      City: Array.from(new Set(filteredData.map(item => item["City"]))),
-      verticalConfiguration: sortStrings(Array.from(new Set(data.map(item => item["Standard Deviation of Building Height"])))),
-      windDirection: sortNumbers(Array.from(new Set(data.map(item => item["Wind Direction"])))),
-      areaDensity: Array.from(new Set(data.map(item => item["Plan Area Density"])))
-    };
-  }, [data, filters.Country]);
-  
-  
-// console.log(uniqueValues)
+      City: Array.from(new Set(filteredData.map((item) => item["City"]))),
+      verticalConfiguration: sortStrings(
+        Array.from(new Set(data.map((item) => item["Standard Deviation of Building Height"]))),
+      ),
+      windDirection: sortNumbers(Array.from(new Set(data.map((item) => item["Wind Direction"])))),
+      areaDensity: Array.from(new Set(data.map((item) => item["Plan Area Density"]))),
+    }
+  }, [data, filters.Country])
+
+  // console.log(uniqueValues)
   const selectedItemsData = useMemo(() => {
-    return data.filter(item => selectedItems.includes(item["Folder Name"]))
+    return data.filter((item) => selectedItems.includes(item["Folder Name"]))
   }, [data, selectedItems])
 
   const totalSelectedSize = useMemo(() => {
-    return Object.entries(selectedFiles).reduce((total, [folderName, fileNames]) => {
-      const folder = data.find(item => item["Folder Name"] === folderName)
-      if (folder) {
-        return total + fileNames.reduce((folderTotal, fileName) => {
-          const file = folder.Files.find(f => f["File Name"] === fileName)
-          return folderTotal + (file ? file["Size (MB)"] : 0)
-        }, 0)
-      }
-      return total
-    }, 0).toFixed(2)
+    return Object.entries(selectedFiles)
+      .reduce((total, [folderName, fileNames]) => {
+        const folder = data.find((item) => item["Folder Name"] === folderName)
+        if (folder) {
+          return (
+            total +
+            fileNames.reduce((folderTotal, fileName) => {
+              const file = folder.Files.find((f) => f["File Name"] === fileName)
+              return folderTotal + (file ? file["Size (MB)"] : 0)
+            }, 0)
+          )
+        }
+        return total
+      }, 0)
+      .toFixed(2)
   }, [data, selectedFiles])
 
-  const handleDownloadSelected = async () => {
-    let downloadCount = 0;
-    for (const [folderName, fileNames] of Object.entries(selectedFiles)) {
-      const folder = data.find(item => item["Folder Name"] === folderName);
-      if (folder) {
-        for (const fileName of fileNames) {
-          const file = folder.Files.find(f => f["File Name"] === fileName);
-          if (file) {
-            window.open(file["Direct Download Link"], '_blank');
-            downloadCount++;
+  const handleDownloadSelected = async (foldersToDownload?: { folderName: string; files: string[] }[]) => {
+    const filesToDownload: { url: string; name: string }[] = [];
+
+    if (foldersToDownload) {
+      for (const { folderName, files } of foldersToDownload) {
+        const folder = data.find((item) => item["Folder Name"] === folderName);
+        if (folder) {
+          for (const fileName of files) {
+            const file = folder.Files.find((f) => f["File Name"] === fileName);
+            if (file) {
+              filesToDownload.push({
+                url: file["Direct Download Link"],
+                name: `${folderName}/${file["File Name"]}`,
+              });
+            }
+          }
+        }
+      }
+    } else {
+      for (const [folderName, fileNames] of Object.entries(selectedFiles)) {
+        const folder = data.find((item) => item["Folder Name"] === folderName);
+        if (folder) {
+          for (const fileName of fileNames) {
+            const file = folder.Files.find((f) => f["File Name"] === fileName);
+            if (file) {
+              filesToDownload.push({
+                url: file["Direct Download Link"],
+                name: `${folderName}/${file["File Name"]}`,
+              });
+            }
           }
         }
       }
     }
-    toast({
-      title: "Download Started",
-      description: `Started downloading ${downloadCount} files.`,
-    });
+
+    if (filesToDownload.length > 0) {
+      toast({
+        title: "Preparing Download",
+        description: `Zipping ${filesToDownload.length} files. This may take a moment.`,
+      });
+
+      console.log('Files to download:', filesToDownload) // Log files being downloaded
+      await zipAndDownloadFiles(filesToDownload);
+    } else {
+      toast({
+        title: "No Files Selected",
+        description: "Please select files to download.",
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleFilter = (filterType: keyof Filters) => {
-    setOpenFilters(prev => ({ ...prev, [filterType]: !prev[filterType] }))
+    setOpenFilters((prev) => ({ ...prev, [filterType]: !prev[filterType] }))
   }
 
   const toggleFolderExpansion = (folderName: string) => {
-    setExpandedFolders(prev => 
-      prev.includes(folderName) ? prev.filter(name => name !== folderName) : [...prev, folderName]
+    setExpandedFolders((prev) =>
+      prev.includes(folderName) ? prev.filter((name) => name !== folderName) : [...prev, folderName],
     )
   }
 
   const handleSort = (key: string) => {
-    let direction: 'ascending' | 'descending' = 'ascending';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
+    let direction: "ascending" | "descending" = "ascending"
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending"
     }
-    setSortConfig({ key, direction });
-  };
+    setSortConfig({ key, direction })
+  }
 
   const isFileSelected = (folderName: string, fileName: string) => {
     return selectedFiles[folderName]?.includes(fileName) || false
   }
 
   const isFolderSelected = (folderName: string) => {
-    const folder = data.find(item => item["Folder Name"] === folderName)
+    const folder = data.find((item) => item["Folder Name"] === folderName)
     return folder ? selectedFiles[folderName]?.length === folder.Files.length : false
   }
 
-  if (loading) return <div className='pt-6 pb-8'>
-    <LoadingSpinner size="md" />
-    </div>
+  if (loading)
+    return (
+      <div className="pt-6 pb-8">
+        <LoadingSpinner size="md" />
+      </div>
+    )
   if (error) return <div>Error: {error}</div>
   return (
     <div className="container mx-auto pt-8">
@@ -310,25 +393,25 @@ export default function DataTable() {
               <Collapsible key={key} open={openFilters[key]} onOpenChange={() => toggleFilter(key as keyof Filters)}>
                 <div className="flex items-center justify-between">
                   <Label htmlFor={`${key}-filter`} className="text-base font-large">
-                    {key === 'Country' ? 'Country' :
-                    key === 'City' ? 'City' :
-                     key === 'verticalConfiguration' ?
-                     (
+                    {key === "Country" ? (
+                      "Country"
+                    ) : key === "City" ? (
+                      "City"
+                    ) : key === "verticalConfiguration" ? (
                       <>
-                        Standard Deviation of <br />  Building Height (m)
+                        Standard Deviation of <br /> Building Height (m)
                       </>
-                    )
-                     :
-                     key === 'windDirection' ? 'Wind Direction (deg)' :
-                     key === 'areaDensity' ? 'Plan Area Density' : key}
+                    ) : key === "windDirection" ? (
+                      "Wind Direction (deg)"
+                    ) : key === "areaDensity" ? (
+                      "Plan Area Density"
+                    ) : (
+                      key
+                    )}
                   </Label>
                   <Popup
                     trigger={
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="p-0 text-gray-400 hover:text-gray-600 "
-                      >
+                      <Button variant="ghost" size="sm" className="p-0 text-gray-400 hover:text-gray-600 ">
                         <Info className="h-4 w-4" />
                       </Button>
                     }
@@ -337,36 +420,29 @@ export default function DataTable() {
                         {key === "horizontalConfiguration" ? (
                           <div className="text-gray-500 size-sm">
                             <p>
-                              <strong>Aligned:</strong> Scenarios featuring a
-                              single, uninterrupted street aligned parallel to
-                              the prevailing wind direction, simulating an
-                              extreme case of urban layouts.
+                              <strong>Aligned:</strong> Scenarios featuring a single, uninterrupted street aligned
+                              parallel to the prevailing wind direction, simulating an extreme case of urban layouts.
                             </p>
                             <p>
-                              <strong>Staggered:</strong> Scenarios that avoid
-                              the presence of major wind-aligned corridors,
-                              which can artificially reduce building drag and
-                              are often employed to calibrate urban canopy
-                              models (UCM).
+                              <strong>Staggered:</strong> Scenarios that avoid the presence of major wind-aligned
+                              corridors, which can artificially reduce building drag and are often employed to calibrate
+                              urban canopy models (UCM).
                             </p>
                           </div>
                         ) : key === "verticalConfiguration" ? (
                           <p className="text-gray-500 size-sm">
-                            Standard Deviation of Building Height is refering to the building height distrubution for the neighbourhoods.
+                            Standard Deviation of Building Height is refering to the building height distrubution for
+                            the neighbourhoods.
                           </p>
                         ) : key === "windDirection" ? (
-                          <p className="text-gray-500 size-sm">
-                      Wind Direction is the approaching angle to the urban
-                          </p>
+                          <p className="text-gray-500 size-sm">Wind Direction is the approaching angle to the urban</p>
                         ) : key === "areaDensity" ? (
                           <p className="text-gray-500 size-sm">
-                      Plan Area Density is the ratio of total building footprint to the whole neighborhood area.
+                            Plan Area Density is the ratio of total building footprint to the whole neighborhood area.
                           </p>
-                        ) 
-                        : (
+                        ) : (
                           "Location filter"
-                        )
-                        }
+                        )}
                       </div>
                     }
                   />
@@ -382,18 +458,20 @@ export default function DataTable() {
                       <Checkbox
                         id={`${key}-all`}
                         checked={selectedValues.length === uniqueValues[key as keyof typeof uniqueValues].length}
-                        onCheckedChange={() => handleFilterChange(key as keyof Filters, 'all')}
+                        onCheckedChange={() => handleFilterChange(key as keyof Filters, "all")}
                       />
-                      <Label htmlFor={`${key}-all`} className='text-md'>All</Label>
+                      <Label htmlFor={`${key}-all`} className="text-md">
+                        All
+                      </Label>
                     </div>
-                    {uniqueValues[key as keyof typeof uniqueValues].map(value => (
+                    {uniqueValues[key as keyof typeof uniqueValues].map((value) => (
                       <div key={value} className="flex items-center space-x-2">
-                        <Checkbox 
+                        <Checkbox
                           id={`${key}-${value}`}
                           checked={selectedValues.includes(value)}
                           onCheckedChange={() => handleFilterChange(key as keyof Filters, value as string)}
                         />
-                        <Label className='font-normal text-md' htmlFor={`${key}-${value}`}>
+                        <Label className="font-normal text-md" htmlFor={`${key}-${value}`}>
                           {value}
                         </Label>
                       </div>
@@ -453,21 +531,21 @@ export default function DataTable() {
                     </Button>
                   </TableHead>
                   <TableHead className="w-20">
-                    <Button variant="ghost" onClick={() => handleSort("Std of Building Height")} >
-                      Std of <br/>
+                    <Button variant="ghost" onClick={() => handleSort("Std of Building Height")}>
+                      Std of <br />
                       Building Height (m)
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
                   <TableHead className="w-25">
                     <Button variant="ghost" onClick={() => handleSort("Wind Direction")}>
-                      Wind Direction <br/> (deg)
+                      Wind Direction <br /> (deg)
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
                   <TableHead className="w-25">
                     <Button variant="ghost" onClick={() => handleSort("Area Density")}>
-                      Plan <br/> Area Density
+                      Plan <br /> Area Density
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
@@ -485,11 +563,7 @@ export default function DataTable() {
                         />
                       </TableCell>
                       <TableCell className="font-bold w-20">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleFolderExpansion(folder["Folder Name"])}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => toggleFolderExpansion(folder["Folder Name"])}>
                           {expandedFolders.includes(folder["Folder Name"]) ? (
                             <ChevronDown className="h-4 w-4 mr-2" />
                           ) : (
@@ -509,11 +583,18 @@ export default function DataTable() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => folder.Files.forEach(file => handleDownload(file["Direct Download Link"]))}
+                          onClick={() =>
+                            handleDownloadSelected([
+                              {
+                                folderName: folder["Folder Name"],
+                                files: folder.Files.map((file) => file["File Name"]),
+                              },
+                            ])
+                          }
                           className="text-xs px-2 py-1"
                         >
                           <Download className="h-3 w-3 mr-1" />
-                         
+                          Download Folder
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -535,7 +616,9 @@ export default function DataTable() {
                                   <TableCell>
                                     <Checkbox
                                       checked={isFileSelected(folder["Folder Name"], file["File Name"])}
-                                      onCheckedChange={() => handleFileCheckboxChange(folder["Folder Name"], file["File Name"])}
+                                      onCheckedChange={() =>
+                                        handleFileCheckboxChange(folder["Folder Name"], file["File Name"])
+                                      }
                                     />
                                   </TableCell>
                                   <TableCell>{file["File Name"]}</TableCell>
@@ -564,12 +647,9 @@ export default function DataTable() {
               <p className="text-md text-gray-600">
                 Selected: {Object.values(selectedFiles).flat().length} files (Total size: {totalSelectedSize} MB)
               </p>
-              <Button
-                onClick={handleDownloadSelected}
-                disabled={Object.keys(selectedFiles).length === 0}
-              >
+              <Button onClick={() => handleDownloadSelected()} disabled={Object.keys(selectedFiles).length === 0}>
                 <Download className="mr-2 h-4 w-4" />
-                Download Selected
+                Download Selected as Zip
               </Button>
             </div>
           </div>
@@ -578,4 +658,3 @@ export default function DataTable() {
     </div>
   )
 }
-
