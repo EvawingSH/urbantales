@@ -4,14 +4,14 @@ import React, { useState, useEffect, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { Download, Search, ChevronDown, ChevronRight, ArrowUpDown } from 'lucide-react'
+import { Download, Search, ChevronDown, ChevronRight, ArrowUpDown } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { LoadingSpinner } from "@/components/component/loadingSpinner"
 import { Popup } from "@/components/component/Popup"
-import { Info } from 'lucide-react'
+import { Info } from "lucide-react"
 import JSZip from "jszip"
 import { saveAs } from "file-saver"
 
@@ -45,43 +45,13 @@ async function zipAndDownloadFiles(files: { url: string; name: string }[]) {
   const zip = new JSZip()
 
   for (const file of files) {
-    try {
-      console.log('Fetching file:', file.name, 'from URL:', file.url) // Log file details
-      const proxyUrl = `/api/proxy?url=${encodeURIComponent(file.url)}`
-      const response = await fetch(proxyUrl)
-      
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-      }
-
-      const blob = await response.blob()
-      zip.file(file.name, blob)
-    } catch (error) {
-      console.error(`Error fetching file ${file.name}:`, error)
-      toast({
-        title: "Download Error",
-        description: `Failed to download ${file.name}. Error: ${(error as Error).message}`,
-        variant: "destructive",
-      })
-    }
+    const response = await fetch(file.url)
+    const blob = await response.blob()
+    zip.file(file.name, blob)
   }
 
-  try {
-    const content = await zip.generateAsync({ type: "blob" })
-    saveAs(content, "selected_files.zip")
-    toast({
-      title: "Download Complete",
-      description: `Successfully zipped and downloaded ${files.length} files.`,
-    })
-  } catch (error) {
-    console.error("Error creating zip file:", error)
-    toast({
-      title: "Zip Creation Failed",
-      description: `An error occurred while creating the zip file. Error: ${(error as Error).message}`,
-      variant: "destructive",
-    })
-  }
+  const content = await zip.generateAsync({ type: "blob" })
+  saveAs(content, "selected_files.zip")
 }
 
 export default function DataTable() {
@@ -296,36 +266,19 @@ export default function DataTable() {
       .toFixed(2)
   }, [data, selectedFiles])
 
-  const handleDownloadSelected = async (foldersToDownload?: { folderName: string; files: string[] }[]) => {
-    const filesToDownload: { url: string; name: string }[] = [];
+  const handleDownloadSelected = async () => {
+    const filesToDownload: { url: string; name: string }[] = []
 
-    if (foldersToDownload) {
-      for (const { folderName, files } of foldersToDownload) {
-        const folder = data.find((item) => item["Folder Name"] === folderName);
-        if (folder) {
-          for (const fileName of files) {
-            const file = folder.Files.find((f) => f["File Name"] === fileName);
-            if (file) {
-              filesToDownload.push({
-                url: file["Direct Download Link"],
-                name: `${folderName}/${file["File Name"]}`,
-              });
-            }
-          }
-        }
-      }
-    } else {
-      for (const [folderName, fileNames] of Object.entries(selectedFiles)) {
-        const folder = data.find((item) => item["Folder Name"] === folderName);
-        if (folder) {
-          for (const fileName of fileNames) {
-            const file = folder.Files.find((f) => f["File Name"] === fileName);
-            if (file) {
-              filesToDownload.push({
-                url: file["Direct Download Link"],
-                name: `${folderName}/${file["File Name"]}`,
-              });
-            }
+    for (const [folderName, fileNames] of Object.entries(selectedFiles)) {
+      const folder = data.find((item) => item["Folder Name"] === folderName)
+      if (folder) {
+        for (const fileName of fileNames) {
+          const file = folder.Files.find((f) => f["File Name"] === fileName)
+          if (file) {
+            filesToDownload.push({
+              url: file["Direct Download Link"],
+              name: `${folderName}/${file["File Name"]}`,
+            })
           }
         }
       }
@@ -335,18 +288,30 @@ export default function DataTable() {
       toast({
         title: "Preparing Download",
         description: `Zipping ${filesToDownload.length} files. This may take a moment.`,
-      });
+      })
 
-      console.log('Files to download:', filesToDownload) // Log files being downloaded
-      await zipAndDownloadFiles(filesToDownload);
+      try {
+        await zipAndDownloadFiles(filesToDownload)
+        toast({
+          title: "Download Complete",
+          description: `Successfully zipped and downloaded ${filesToDownload.length} files.`,
+        })
+      } catch (error) {
+        console.error("Error zipping files:", error)
+        toast({
+          title: "Download Failed",
+          description: "An error occurred while zipping the files. Please try again.",
+          variant: "destructive",
+        })
+      }
     } else {
       toast({
         title: "No Files Selected",
         description: "Please select files to download.",
         variant: "destructive",
-      });
+      })
     }
-  };
+  }
 
   const toggleFilter = (filterType: keyof Filters) => {
     setOpenFilters((prev) => ({ ...prev, [filterType]: !prev[filterType] }))
@@ -583,18 +548,10 @@ export default function DataTable() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() =>
-                            handleDownloadSelected([
-                              {
-                                folderName: folder["Folder Name"],
-                                files: folder.Files.map((file) => file["File Name"]),
-                              },
-                            ])
-                          }
+                          onClick={() => folder.Files.forEach((file) => handleDownload(file["Direct Download Link"]))}
                           className="text-xs px-2 py-1"
                         >
                           <Download className="h-3 w-3 mr-1" />
-                          Download Folder
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -647,7 +604,7 @@ export default function DataTable() {
               <p className="text-md text-gray-600">
                 Selected: {Object.values(selectedFiles).flat().length} files (Total size: {totalSelectedSize} MB)
               </p>
-              <Button onClick={() => handleDownloadSelected()} disabled={Object.keys(selectedFiles).length === 0}>
+              <Button onClick={handleDownloadSelected} disabled={Object.keys(selectedFiles).length === 0}>
                 <Download className="mr-2 h-4 w-4" />
                 Download Selected as Zip
               </Button>
@@ -658,3 +615,4 @@ export default function DataTable() {
     </div>
   )
 }
+
