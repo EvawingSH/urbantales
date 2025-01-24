@@ -547,14 +547,14 @@ export default function DataTable() {
                       <TableCell>{folder["Wind Direction"]}</TableCell>
                       <TableCell>{folder["Plan Area Density"]}</TableCell>
                       <TableCell>
-                        <Button
+                      <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => folder.Files.forEach((file) => handleDownload(file["Direct Download Link"]))}
+                          onClick={handleDownloadSelected}
                           className="text-xs px-2 py-1"
-                        >
+                      >
                           <Download className="h-3 w-3 mr-1" />
-                        </Button>
+                      </Button>
                       </TableCell>
                     </TableRow>
                     {expandedFolders.includes(folder["Folder Name"]) && (

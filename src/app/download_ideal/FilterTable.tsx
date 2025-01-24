@@ -29,6 +29,8 @@ import {
 import { LoadingSpinner } from "@/components/component/loadingSpinner";
 import { Popup } from "@/components/component/Popup";
 import { Info } from "lucide-react";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 interface FileItem {
   "File Name": string;
@@ -52,6 +54,21 @@ interface Filters {
   verticalConfiguration: string[];
   windDirection: string[];
   areaDensity: string[];
+}
+
+async function zipAndDownloadFiles(files: { url: string; name: string }[]) {
+  const zip = new JSZip();
+
+  for (const file of files) {
+    // Use a proxy to bypass CORS restrictions testing locally
+    // const proxyUrl = "https://cors-anywhere.herokuapp.com/"
+    const response = await fetch(file.url);
+    const blob = await response.blob();
+    zip.file(file.name, blob, { binary: true });
+  }
+
+  const content = await zip.generateAsync({ type: "blob" });
+  saveAs(content, "selected_files.zip");
 }
 
 export default function DataTable() {
@@ -240,7 +257,9 @@ export default function DataTable() {
         new Set(data.map((item) => item["Horizontal Configuration"]))
       ),
       verticalConfiguration: Array.from(
-        new Set(data.map((item) => item["Standard Deviation of Building Height"]))
+        new Set(
+          data.map((item) => item["Standard Deviation of Building Height"])
+        )
       ),
       windDirection: Array.from(
         new Set(data.map((item) => item["Wind Direction"]))
@@ -277,23 +296,51 @@ export default function DataTable() {
   }, [data, selectedFiles]);
 
   const handleDownloadSelected = async () => {
-    let downloadCount = 0;
+    const filesToDownload: { url: string; name: string }[] = [];
+
     for (const [folderName, fileNames] of Object.entries(selectedFiles)) {
       const folder = data.find((item) => item["Folder Name"] === folderName);
       if (folder) {
         for (const fileName of fileNames) {
           const file = folder.Files.find((f) => f["File Name"] === fileName);
           if (file) {
-            window.open(file["Direct Download Link"], "_blank");
-            downloadCount++;
+            filesToDownload.push({
+              url: file["Direct Download Link"],
+              name: `${folderName}/${file["File Name"]}`,
+            });
           }
         }
       }
     }
-    toast({
-      title: "Download Started",
-      description: `Started downloading ${downloadCount} files.`,
-    });
+
+    if (filesToDownload.length > 0) {
+      toast({
+        title: "Preparing Download",
+        description: `Zipping ${filesToDownload.length} files. This may take a moment.`,
+      });
+
+      try {
+        await zipAndDownloadFiles(filesToDownload);
+        toast({
+          title: "Download Complete",
+          description: `Successfully zipped and downloaded ${filesToDownload.length} files.`,
+        });
+      } catch (error) {
+        console.error("Error zipping files:", error);
+        toast({
+          title: "Download Failed",
+          description:
+            "An error occurred while zipping the files. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      toast({
+        title: "No Files Selected",
+        description: "Please select files to download.",
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleFilter = (filterType: keyof Filters) => {
@@ -360,18 +407,20 @@ export default function DataTable() {
                     htmlFor={`${key}-filter`}
                     className="text-base font-large"
                   >
-                    {key === "horizontalConfiguration"
-                      ? "Horizontal Configuration"
-                      : key === "verticalConfiguration"
-                      ? 
-                      (
-                        <>Standard Deviation of <br/>Building Height (m)
-                        </>)
-                      : key === "windDirection"
-                      ? "Wind Direction (deg)"
-                      : key === "areaDensity"
-                      ? "Plan Area Density"
-                      : key}
+                    {key === "horizontalConfiguration" ? (
+                      "Horizontal Configuration"
+                    ) : key === "verticalConfiguration" ? (
+                      <>
+                        Standard Deviation of <br />
+                        Building Height (m)
+                      </>
+                    ) : key === "windDirection" ? (
+                      "Wind Direction (deg)"
+                    ) : key === "areaDensity" ? (
+                      "Plan Area Density"
+                    ) : (
+                      key
+                    )}
                   </Label>
                   <Popup
                     trigger={
@@ -403,15 +452,18 @@ export default function DataTable() {
                           </div>
                         ) : key === "verticalConfiguration" ? (
                           <p className="text-gray-500 size-sm">
-                            Standard Deviation of Building Height is refering to the building height distrubution for the building blocks.
+                            Standard Deviation of Building Height is refering to
+                            the building height distrubution for the building
+                            blocks.
                           </p>
                         ) : key === "windDirection" ? (
                           <p className="text-gray-500 size-sm">
-                      Wind Direction is the approaching angle to the urban
+                            Wind Direction is the approaching angle to the urban
                           </p>
                         ) : key === "areaDensity" ? (
                           <p className="text-gray-500 size-sm">
-                      Plan Area Density is the ratio of total building footprint to the whole neighborhood area.
+                            Plan Area Density is the ratio of total building
+                            footprint to the whole neighborhood area.
                           </p>
                         ) : (
                           "Information about this filter"
@@ -530,7 +582,8 @@ export default function DataTable() {
                       variant="ghost"
                       onClick={() => handleSort("Std of Building Height")}
                     >
-                      Std of <br/>Building Height (m)
+                      Std of <br />
+                      Building Height (m)
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
@@ -539,7 +592,7 @@ export default function DataTable() {
                       variant="ghost"
                       onClick={() => handleSort("Wind Direction")}
                     >
-                      Wind Direction <br/> (deg)
+                      Wind Direction <br /> (deg)
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
@@ -548,7 +601,8 @@ export default function DataTable() {
                       variant="ghost"
                       onClick={() => handleSort("Plan Area Density")}
                     >
-                      Plan <br/>Area Density
+                      Plan <br />
+                      Area Density
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
@@ -598,11 +652,7 @@ export default function DataTable() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() =>
-                            folder.Files.forEach((file) =>
-                              handleDownload(file["Direct Download Link"])
-                            )
-                          }
+                          onClick={handleDownloadSelected}
                           className="text-xs px-2 py-1"
                         >
                           <Download className="h-3 w-3 mr-1" />
