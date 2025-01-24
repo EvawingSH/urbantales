@@ -45,9 +45,11 @@ async function zipAndDownloadFiles(files: { url: string; name: string }[]) {
   const zip = new JSZip()
 
   for (const file of files) {
+    // Use a proxy to bypass CORS restrictions testing locally
+    // const proxyUrl = "https://cors-anywhere.herokuapp.com/"
     const response = await fetch(file.url)
     const blob = await response.blob()
-    zip.file(file.name, blob)
+    zip.file(file.name, blob, {binary: true})
   }
 
   const content = await zip.generateAsync({ type: "blob" })
