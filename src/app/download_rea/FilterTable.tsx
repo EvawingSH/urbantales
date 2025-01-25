@@ -46,11 +46,9 @@ async function zipAndDownloadFiles(files: { url: string; name: string }[]) {
   const zip = new JSZip()
 
   for (const file of files) {
-    // Use a proxy to bypass CORS restrictions testing locally
-    // const proxyUrl = "https://cors-anywhere.herokuapp.com/"
     const response = await fetch(file.url)
     const blob = await response.blob()
-    zip.file(file.name, blob, {binary: true})
+    zip.file(file.name, blob, { binary: true })
   }
 
   const content = await zip.generateAsync({ type: "blob" })
@@ -80,6 +78,7 @@ export default function DataTable() {
   })
   const [expandedFolders, setExpandedFolders] = useState<string[]>([])
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "ascending" | "descending" } | null>(null)
+  const [isDownloading, setIsDownloading] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
@@ -288,6 +287,7 @@ export default function DataTable() {
     }
 
     if (filesToDownload.length > 0) {
+      setIsDownloading(true)
       toast({
         title: "Preparing Download",
         description: `Zipping ${filesToDownload.length} files. This may take a moment.`,
@@ -306,6 +306,8 @@ export default function DataTable() {
           description: "An error occurred while zipping the files. Please try again.",
           variant: "destructive",
         })
+      } finally {
+        setIsDownloading(false)
       }
     } else {
       toast({
@@ -548,14 +550,14 @@ export default function DataTable() {
                       <TableCell>{folder["Wind Direction"]}</TableCell>
                       <TableCell>{folder["Plan Area Density"]}</TableCell>
                       <TableCell>
-                      <Button
+                        <Button
                           variant="outline"
                           size="sm"
                           onClick={() => folder.Files.forEach((file) => handleDownload(file["Direct Download Link"]))}
                           className="text-xs px-2 py-1"
                         >
                           <Download className="h-3 w-3 mr-1" />
-                      </Button>
+                        </Button>
                       </TableCell>
                     </TableRow>
                     {expandedFolders.includes(folder["Folder Name"]) && (
@@ -607,9 +609,12 @@ export default function DataTable() {
               <p className="text-md text-gray-600">
                 Selected: {Object.values(selectedFiles).flat().length} files (Total size: {totalSelectedSize} MB)
               </p>
-              <Button onClick={handleDownloadSelected} disabled={Object.keys(selectedFiles).length === 0}>
+              <Button
+                onClick={handleDownloadSelected}
+                disabled={Object.keys(selectedFiles).length === 0 || isDownloading}
+              >
                 <Download className="mr-2 h-4 w-4" />
-                Download Selected as Zip
+                {isDownloading ? "Zipping & Downloading..." : "Download Selected Files"}
               </Button>
             </div>
           </div>

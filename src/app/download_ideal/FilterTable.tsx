@@ -61,8 +61,6 @@ async function zipAndDownloadFiles(files: { url: string; name: string }[]) {
   const zip = new JSZip();
 
   for (const file of files) {
-    // Use a proxy to bypass CORS restrictions testing locally
-    // const proxyUrl = "https://cors-anywhere.herokuapp.com/"
     const response = await fetch(file.url);
     const blob = await response.blob();
     zip.file(file.name, blob, { binary: true });
@@ -98,6 +96,7 @@ export default function DataTable() {
     key: string;
     direction: "ascending" | "descending";
   } | null>(null);
+ const [isDownloading, setIsDownloading] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
@@ -297,52 +296,54 @@ export default function DataTable() {
   }, [data, selectedFiles]);
 
   const handleDownloadSelected = async () => {
-    const filesToDownload: { url: string; name: string }[] = [];
-
-    for (const [folderName, fileNames] of Object.entries(selectedFiles)) {
-      const folder = data.find((item) => item["Folder Name"] === folderName);
-      if (folder) {
-        for (const fileName of fileNames) {
-          const file = folder.Files.find((f) => f["File Name"] === fileName);
-          if (file) {
-            filesToDownload.push({
-              url: file["Direct Download Link"],
-              name: `${folderName}/${file["File Name"]}`,
-            });
+      const filesToDownload: { url: string; name: string }[] = []
+  
+      for (const [folderName, fileNames] of Object.entries(selectedFiles)) {
+        const folder = data.find((item) => item["Folder Name"] === folderName)
+        if (folder) {
+          for (const fileName of fileNames) {
+            const file = folder.Files.find((f) => f["File Name"] === fileName)
+            if (file) {
+              filesToDownload.push({
+                url: file["Direct Download Link"],
+                name: `${folderName}/${file["File Name"]}`,
+              })
+            }
           }
         }
       }
-    }
-
-    if (filesToDownload.length > 0) {
-      toast({
-        title: "Preparing Download",
-        description: `Zipping ${filesToDownload.length} files. This may take a moment.`,
-      });
-
-      try {
-        await zipAndDownloadFiles(filesToDownload);
+  
+      if (filesToDownload.length > 0) {
+        setIsDownloading(true)
         toast({
-          title: "Download Complete",
-          description: `Successfully zipped and downloaded ${filesToDownload.length} files.`,
-        });
-      } catch (error) {
-        console.error("Error zipping files:", error);
+          title: "Preparing Download",
+          description: `Zipping ${filesToDownload.length} files. This may take a moment.`,
+        })
+  
+        try {
+          await zipAndDownloadFiles(filesToDownload)
+          toast({
+            title: "Download Complete",
+            description: `Successfully zipped and downloaded ${filesToDownload.length} files.`,
+          })
+        } catch (error) {
+          console.error("Error zipping files:", error)
+          toast({
+            title: "Download Failed",
+            description: "An error occurred while zipping the files. Please try again.",
+            variant: "destructive",
+          })
+        } finally {
+          setIsDownloading(false)
+        }
+      } else {
         toast({
-          title: "Download Failed",
-          description:
-            "An error occurred while zipping the files. Please try again.",
+          title: "No Files Selected",
+          description: "Please select files to download.",
           variant: "destructive",
-        });
+        })
       }
-    } else {
-      toast({
-        title: "No Files Selected",
-        description: "Please select files to download.",
-        variant: "destructive",
-      });
     }
-  };
 
   const toggleFilter = (filterType: keyof Filters) => {
     setOpenFilters((prev) => ({ ...prev, [filterType]: !prev[filterType] }));
@@ -722,10 +723,10 @@ export default function DataTable() {
               </p>
               <Button
                 onClick={handleDownloadSelected}
-                disabled={Object.keys(selectedFiles).length === 0}
+                disabled={Object.keys(selectedFiles).length === 0 ||isDownloading}
               >
                 <Download className="mr-2 h-4 w-4" />
-                Download Selected
+                {isDownloading ? "Zipping & Downloading..." : "Download Selected Files"}
               </Button>
             </div>
           </div>
