@@ -353,6 +353,7 @@ export default function DataTable() {
     )
   if (error) return <div>Error: {error}</div>
   return (
+  <div className="relative pb-16">
     <div className="container mx-auto pt-8">
       <h1 className="text-2xl font-bold mb-6 text-left">Realistic Urban Neighbourhoods Cases Download</h1>
       <div className="flex flex-col lg:flex-row gap-8">
@@ -605,22 +606,32 @@ export default function DataTable() {
                 ))}
               </TableBody>
             </Table>
-            <div className="mt-4 flex justify-between items-center p-4">
-              <p className="text-md text-gray-600">
-                Selected: {Object.values(selectedFiles).flat().length} files (Total size: {totalSelectedSize} MB)
-              </p>
-              <Button
-                onClick={handleDownloadSelected}
-                disabled={Object.keys(selectedFiles).length === 0 || isDownloading}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                {isDownloading ? "Zipping & Downloading..." : "Download Selected Files"}
-              </Button>
-            </div>
-          </div>
+           </div>
         </div>
       </div>
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex justify-between items-center">
+          <p className="text-md text-gray-600">
+            Selected: {Object.values(selectedFiles).flat().length} files (Total size: {totalSelectedSize} MB)
+          </p>
+          <div className="flex items-center">
+            {Number.parseFloat(totalSelectedSize) > 1024 && (
+              <p className="text-red-500 mr-4 text-sm">
+                Please download files smaller than 1GB (1024MB) at a time to avoid failure.
+              </p>
+            )}
+            <Button
+              onClick={handleDownloadSelected}
+              disabled={
+                Object.keys(selectedFiles).length === 0 || isDownloading || Number.parseFloat(totalSelectedSize) > 1024
+              }
+            >
+              <Download className="mr-2 h-4 w-4" />
+              {isDownloading ? "Zipping & Downloading..." : "Download Selected Files"}
+            </Button>
+          </div>
+        </div>
     </div>
+  </div>
   )
 }
 
