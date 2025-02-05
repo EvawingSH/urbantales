@@ -14,6 +14,7 @@ import { Popup } from "@/components/component/Popup"
 import { Info } from "lucide-react"
 import JSZip from "jszip"
 import { saveAs } from "file-saver"
+import MetadataFilesPage from "@/components/component/metadata"
 
 interface FileItem {
   "File Name": string
@@ -356,6 +357,7 @@ export default function DataTable() {
   <div className="relative pb-16">
     <div className="container mx-auto pt-8">
       <h1 className="text-2xl font-bold mb-6 text-left">Realistic Urban Neighbourhoods Cases Download</h1>
+      <MetadataFilesPage/>
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="lg:w-1/5">
           <h2 className="text-lg font-bold mb-4 border-b border-gray-300 pb-4 pt-2">Filters</h2>
