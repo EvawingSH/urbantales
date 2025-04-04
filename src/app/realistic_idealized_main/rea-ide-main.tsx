@@ -11,7 +11,7 @@ import Link from "next/link";
 
 export function ReaIdeMain() {
   return (
-    <div className="bg-gray-100 pt-6 pb-10">
+    <div className="pt-6 pb-10">
       <main className="container mx-auto px-4 ">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-24 justify-center">
           <Card className="flex flex-col max-w-[500px] w-full shadow-md mx-auto ">

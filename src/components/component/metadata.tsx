@@ -16,14 +16,14 @@ const metadataFiles: FileData[] = [
     fileName: "Flow metadata",
     description: "Metadata for each case and canopy-averaged flow statistics as describled in Nazarian et al., (2025).",
     downloadUrl:
-      "https://urbantales.020495.xyz/index.php/apps/files/ajax/download.php?dir=%2FurbanTALES&files=UrbanTALES.csv&downloadStartSecret=4kzlsu7kaib",
+      "https://urbantales.020495.xyz/index.php/s/9SrPX94gfxkc6rZ/download",
   },
   {
     fileName: "Metadata",
     description:
       "Metadata such as urban geometrical parameters, the position of the neighborhoods, and other configurations as describled in Nazarian et al., (2025).",
     downloadUrl:
-      "https://urbantales.020495.xyz/index.php/apps/files/ajax/download.php?dir=%2FurbanTALES&files=metadata.csv&downloadStartSecret=07ufr41h1jm3",
+      "https://urbantales.020495.xyz/index.php/s/jKZQj6NCN6ZGQjT/download",
   },
 ]
 
