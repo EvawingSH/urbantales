@@ -1,35 +1,244 @@
-import Image from "next/image"
-import { Header } from "@/components/component/header"
-import { Footer } from "@/components/component/footer"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
+"use client"
 
-export default function Page() {
+import { useState, useCallback, useMemo } from "react"
+import { useToast } from "@/components/ui/use-toast"
+import cityDataRaw from "@/app/api/data/RealisticModelmeta.json"
+import WorldMap from "@/components/component/worldmap"
+import CityFilters from "@/components/component/cityfilters"
+import CityInfo from "@/components/component/city-info"
+import type { City } from "../../../types/city"
+import {Header} from "@/components/component/header"
+import {Footer} from "@/components/component/footer";
+
+//defind a placeholder
+const placeholderimage='/placeholder.png'
+
+// Cast the imported JSON data to match our City type
+const cityData: City[] = cityDataRaw.map((city, index) => {
+  // Find PNG file in the Files array if available
+  const pngFile = city.Files?.find((file) => file["File Name"]?.endsWith(".png"))
+  const pngUrl = pngFile ? pngFile["Direct Download Link"] : null
+
+  // Validate coordinates
+  let validCoordinates: [number, number] = [0, 0] // Default fallback
+  if (
+    city.coordinates &&
+    Array.isArray(city.coordinates) &&
+    city.coordinates.length === 2 &&
+    typeof city.coordinates[0] === "number" &&
+    typeof city.coordinates[1] === "number"
+  ) {
+    validCoordinates = city.coordinates as [number, number]
+  }
+
+  return {
+    id: index + 1,
+    name: city.City,
+    country: city.Country,
+    coordinates: validCoordinates,
+    stdDevBuildingHeight: city["Std of Building Height"],
+    stdDevBuildingHeightRange: city["Standard Deviation of Building Height"],
+    windDirection: city["Wind Direction"],
+    planAreaDensity: city["Plan Area Density"],
+    image: pngUrl || placeholderimage, // Use PNG URL if available, otherwise use placeholder
+    folderName: city["Folder Name"], // Add folder name for reference
+  }
+})
+
+// Group cities by name for counting cases
+const cityCounts = cityData.reduce(
+  (acc, city) => {
+    acc[city.name] = (acc[city.name] || 0) + 1
+    return acc
+  },
+  {} as Record<string, number>,
+)
+
+export default function WorldMapPage() {
+  // Find first city in the data
+  const firstCity = cityData[0]
+
+  const [selectedCity, setSelectedCity] = useState<City | null>(firstCity || null)
+  const [filteredCities, setFilteredCities] = useState<City[]>(cityData)
+  const [displayedCities, setDisplayedCities] = useState<City[]>(cityData)
+  const [isDownloading, setIsDownloading] = useState<Record<string, boolean>>({})
+  const { toast } = useToast()
+
+  // Get all cases for the selected city
+  const selectedCityCases = useMemo(() => {
+    if (!selectedCity) return []
+    return cityData.filter((city) => city.name === selectedCity.name)
+  }, [selectedCity])
+
+  // Handle filter changes from the filter component
+  const handleFilterChange = useCallback(
+    (filters: {
+      country: string
+      city: string
+      height: string
+      wind: string
+      density: string
+    }) => {
+      let result = [...cityData]
+
+      if (filters.country && filters.country !== "all") {
+        result = result.filter((city) => city.country === filters.country)
+      }
+
+      if (filters.city && filters.city !== "all") {
+        result = result.filter((city) => city.name === filters.city)
+      }
+
+      if (filters.wind && filters.wind !== "all") {
+        result = result.filter((city) => city.windDirection !== null && city.windDirection.toString() === filters.wind)
+      }
+
+      // Filter by height range
+      if (filters.height && filters.height !== "all") {
+        result = result.filter((city) => city.stdDevBuildingHeightRange === filters.height)
+      }
+
+      // Filter by density
+      if (filters.density && filters.density !== "all") {
+        result = result.filter((city) => city.planAreaDensity === filters.density)
+      }
+
+      setFilteredCities(result)
+
+      // Always show all cities on the map, but highlight the filtered ones
+      setDisplayedCities(cityData)
+    },
+    [],
+  )
+
+  // Handle city selection from the map
+  const handleMapCitySelect = useCallback((city: City) => {
+    setSelectedCity(city)
+  }, [])
+
+  // Handle city selection from filters
+  const handleCitySelect = useCallback((city: City | null) => {
+    setSelectedCity(city)
+  }, [])
+
+  // Handle download of all files for a case
+  const handleDownload = useCallback(
+    async (folderName: string) => {
+      try {
+        setIsDownloading((prev) => ({ ...prev, [folderName]: true }))
+
+        // Find the original data for this folder
+        const folderData = cityDataRaw.find((city) => city["Folder Name"] === folderName)
+
+        if (!folderData || !folderData.Files || folderData.Files.length === 0) {
+          throw new Error("No files found for this case")
+        }
+
+        // Dynamically import JSZip
+        const JSZip = (await import("jszip")).default
+        const zip = new JSZip()
+
+        // Create a folder in the zip
+        const folder = zip.folder(folderName)
+        if (!folder) throw new Error("Failed to create folder in zip")
+
+        // Add each file to the zip
+        const filePromises = folderData.Files.map(async (file) => {
+          try {
+            const downloadLink = file["Direct Download Link"]
+            const response = await fetch(downloadLink)
+            if (!response.ok) throw new Error(`Failed to fetch ${file["File Name"]}`)
+
+            const blob = await response.blob()
+            folder.file(file["File Name"], blob)
+
+            return { success: true, fileName: file["File Name"] }
+          } catch (error) {
+            console.error(`Error downloading ${file["File Name"]}:`, error)
+            return { success: false, fileName: file["File Name"] }
+          }
+        })
+
+        // Wait for all files to be processed
+        const results = await Promise.all(filePromises)
+        const successCount = results.filter((r) => r.success).length
+
+        // Generate the zip file
+        const zipBlob = await zip.generateAsync({ type: "blob" })
+
+        // Create a download link and trigger the download
+        const url = URL.createObjectURL(zipBlob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `${folderName}.zip`
+        document.body.appendChild(a)
+        a.click()
+
+        // Clean up
+        URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+
+        toast({
+          title: "Download Complete",
+          description: `Successfully downloaded ${successCount} of ${folderData.Files.length} files for ${folderName}`,
+        })
+      } catch (error) {
+        console.error("Download error:", error)
+        toast({
+          title: "Download Failed",
+          description: error instanceof Error ? error.message : "Failed to download files",
+          variant: "destructive",
+        })
+      } finally {
+        setIsDownloading((prev) => ({ ...prev, [folderName]: false }))
+      }
+    },
+    [toast],
+  )
+
   return (
+    
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-8">
-        <div className="max-w-4xl w-full space-y-8 text-center">
-          <h1 className="text-3xl font-bold mb-8">The visualization is coming soon...</h1>
-          <div className="relative w-full max-w-4xl h-[600px]">
-            <Image
-              src="/Rea_viz.png"
-              alt="Realistic urban neighbourhoods visualization"
-              fill
-              style={{
-                objectFit: "contain",
-                filter: "drop-shadow(6px 6px 8px rgba(0, 0, 0, 0.1))",
-              }}
-              priority
+      <main className="flex-1 container mx-auto py-6">
+        <h1 className="text-3xl font-bold mb-6">Realistic Urban Neighbourhoods</h1>
+
+        {/* Main container - increased to 70% of screen height */}
+        <div className="h-[70vh] flex flex-col lg:flex-row">
+          {/* Left Column - Filter and Map (70% width) */}
+          <div className="lg:w-[70%] h-full flex flex-col pr-3 relative">
+            {/* Filters - Positioned at the top */}
+            <div className="z-10">
+              <CityFilters
+                cityData={cityData}
+                selectedCity={selectedCity}
+                onFilterChange={handleFilterChange}
+                onCitySelect={handleCitySelect}
+                cityCounts={cityCounts}
+              />
+            </div>
+
+            {/* Map Section - Positioned to fill from below filters to bottom */}
+            <div className="absolute top-[calc(100%-70vh+150px)] bottom-0 left-0 right-3">
+              <WorldMap
+                filteredCities={displayedCities}
+                selectedCity={selectedCity}
+                setSelectedCity={handleMapCitySelect}
+                cityCounts={cityCounts}
+              />
+            </div>
+          </div>
+
+          {/* Right Column - City Details (30% width) */}
+          <div className="lg:w-[30%] h-full pl-3">
+            <CityInfo
+              selectedCity={selectedCity}
+              cityCounts={cityCounts}
+              selectedCityCases={selectedCityCases}
+              isDownloading={isDownloading}
+              handleDownload={handleDownload}
             />
           </div>
-          <Link href="/realistic_idealized_main" passHref>
-            <Button variant="ghost" className="px-2 py-2 text-lg">
-              <ArrowLeft className="mr-2 h-6 w-6" />
-              Back
-            </Button>
-          </Link>
         </div>
       </main>
       <Footer />
