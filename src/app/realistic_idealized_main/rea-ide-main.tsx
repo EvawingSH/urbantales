@@ -73,7 +73,7 @@ export function ReaIdeMain() {
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Link href="/realistic_viz" passHref>
+              <Link href="/ideal_viz" passHref>
                 <Button variant="outline" className="shadow-sm">
                   Learn more
                 </Button>
