@@ -58,10 +58,11 @@ export default function WorldMapPage() {
   // Find first city in the data
   const firstCity = cityData[0]
 
-  const [selectedCity, setSelectedCity] = useState<City | null>(firstCity || null)
+  const [selectedCity, setSelectedCity] = useState<City | null>(null)
   const [filteredCities, setFilteredCities] = useState<City[]>(cityData)
   const [displayedCities, setDisplayedCities] = useState<City[]>(cityData)
   const [isDownloading, setIsDownloading] = useState<Record<string, boolean>>({})
+  const [zoomToLocation, setZoomToLocation] = useState<{ coordinates: [number, number]; zoom: number } | null>(null)
   const { toast } = useToast()
 
   // Get all cases for the selected city
@@ -87,20 +88,15 @@ export default function WorldMapPage() {
 
       if (filters.city && filters.city !== "all") {
         result = result.filter((city) => city.name === filters.city)
-      }
 
-      if (filters.wind && filters.wind !== "all") {
-        result = result.filter((city) => city.windDirection !== null && city.windDirection.toString() === filters.wind)
-      }
-
-      // Filter by height range
-      if (filters.height && filters.height !== "all") {
-        result = result.filter((city) => city.stdDevBuildingHeightRange === filters.height)
-      }
-
-      // Filter by density
-      if (filters.density && filters.density !== "all") {
-        result = result.filter((city) => city.planAreaDensity === filters.density)
+        // Find the first city that matches the filter and zoom to it
+        const cityToZoom = cityData.find((city) => city.name === filters.city)
+        if (cityToZoom) {
+          setZoomToLocation({ coordinates: cityToZoom.coordinates, zoom: 500 })
+        }
+      } else if (filters.city === "all") {
+        // Reset zoom when no specific city is selected
+        setZoomToLocation({ coordinates: [0, 0], zoom: 100 })
       }
 
       setFilteredCities(result)
@@ -108,17 +104,24 @@ export default function WorldMapPage() {
       // Always show all cities on the map, but highlight the filtered ones
       setDisplayedCities(cityData)
     },
-    [],
+    [cityData],
   )
 
   // Handle city selection from the map
   const handleMapCitySelect = useCallback((city: City) => {
     setSelectedCity(city)
+    // Zoom to the selected city
+    setZoomToLocation({ coordinates: city.coordinates, zoom: 500 })
   }, [])
 
   // Handle city selection from filters
   const handleCitySelect = useCallback((city: City | null) => {
     setSelectedCity(city)
+
+    // Zoom to the selected city if one is selected
+    if (city) {
+      setZoomToLocation({ coordinates: city.coordinates, zoom: 500 })
+    }
   }, [])
 
   // Handle download of all files for a case
@@ -197,7 +200,6 @@ export default function WorldMapPage() {
   )
 
   return (
-    
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-1 container mx-auto py-6">
@@ -225,6 +227,7 @@ export default function WorldMapPage() {
                 selectedCity={selectedCity}
                 setSelectedCity={handleMapCitySelect}
                 cityCounts={cityCounts}
+                zoomToLocation={zoomToLocation}
               />
             </div>
           </div>
