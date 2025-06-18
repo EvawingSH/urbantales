@@ -75,7 +75,8 @@ export default function ColumnGrid() {
       const matchesLayout = (caseData["Horizontal Configuration"] === "Aligned") === !isStaggered
       const matchesWind = Number(caseData["Wind Direction"]) === Number.parseInt(windDirection)
       const matchesDensity = Math.abs(Number(caseData.areaDensity) - areaDensities[areaDensityIndex]) < 0.001
-      const matchesStdDev = Math.abs(Number(caseData["Std of Building Height"]) - standardDeviations[stdDevIndex]) < 0.01
+      const matchesStdDev =
+        Math.abs(Number(caseData["Std of Building Height"]) - standardDeviations[stdDevIndex]) < 0.001
 
       return matchesLayout && matchesWind && matchesDensity && matchesStdDev
     })
@@ -98,7 +99,7 @@ export default function ColumnGrid() {
   const minHeight = Math.min(...scaledHeights)
   const maxHeight = Math.max(...scaledHeights)
 
-   return (
+  return (
     <div className="w-full flex flex-col bg-gray-100">
       <style jsx>{`
         .slider-dark::-webkit-slider-thumb {
@@ -137,9 +138,9 @@ export default function ColumnGrid() {
         {/* 3D Model Container - Left Side */}
         <div className="flex-1 mr-6 bg-white border border-gray-300 rounded-lg shadow-lg" style={{ height: "100%" }}>
           <div className="h-full flex flex-col">
-            {/* Height Scale Legend - Only show when there's a matching case */}
-            {hasMatchingCase && (
-              <div className="p-4 border-b bg-gray-50 flex-shrink-0">
+            {/* Height Scale Legend - Always reserve space */}
+            <div className="p-4 border-b bg-gray-50 flex-shrink-0" style={{ minHeight: "72px" }}>
+              {hasMatchingCase ? (
                 <div className="flex items-center justify-center">
                   <div className="text-center font-semibold mr-4">Height Scale (m)</div>
                   <div className="flex items-center">
@@ -154,8 +155,12 @@ export default function ColumnGrid() {
                     <span className="ml-2 text-sm">{maxHeight.toFixed(1)}</span>
                   </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center font-semibold text-gray-400">Height Scale</div>
+                </div>
+              )}
+            </div>
 
             <div className="flex-1 w-full">
               <Canvas shadows camera={{ position: [-45, 30, 45], fov: 50 }}>
@@ -176,104 +181,106 @@ export default function ColumnGrid() {
               </Canvas>
             </div>
 
-            {/* Controls at bottom */}
-            <div className="bg-white p-4 border-t flex-shrink-0">
-              <div className="max-w-4xl mx-auto space-y-6">
-                {/* First row: Plan Area Density and Std of Building Height */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Plan Area Density: {(areaDensities[areaDensityIndex] || 0).toFixed(2)}
-                    </label>
-                    <input
-                      type="range"
-                      min={0}
-                      max={Math.max(0, areaDensities.length - 1)}
-                      step={1}
-                      value={areaDensityIndex}
-                      onChange={(e) => setAreaDensityIndex(Number(e.target.value))}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-dark"
-                    />
-                    <div className="flex justify-between text-xs text-gray-500 px-1">
-                      {areaDensities.map((density, index) => (
-                        <span key={index} className={index === areaDensityIndex ? "font-bold" : ""}>
-                          {(density || 0).toFixed(2)}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Standard Deviation slider */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Std of Building Height: {getStdDevFromVerticalConfig(currentStdDev).toFixed(2)}
-                    </label>
-                    <input
-                      type="range"
-                      min={0}
-                      max={Math.max(0, standardDeviations.length - 1)}
-                      step={1}
-                      value={stdDevIndex}
-                      onChange={(e) => setStdDevIndex(Number(e.target.value))}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-dark"
-                    />
-                    <div className="flex justify-between text-xs text-gray-500 px-1">
-                      {standardDeviations.map((sd, index) => (
-                        <span key={index} className={index === stdDevIndex ? "font-bold" : ""}>
-                          {getStdDevFromVerticalConfig(sd).toFixed(2)}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Second row: Horizontal Configuration and Wind Direction */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Horizontal Configuration switch */}
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="staggered-mode"
-                      checked={isStaggered}
-                      onChange={(e) => setIsStaggered(e.target.checked)}
-                      className="w-4 h-4 accent-gray-700 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
-                    />
-                    <label htmlFor="staggered-mode" className="text-sm font-medium text-gray-700">
-                      Horizontal Configuration (Staggered)
-                    </label>
-                  </div>
-
-                  {/* Wind Direction radio buttons */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">Wind Direction</label>
-                    <div className="flex space-x-4">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id="wind-0"
-                          name="wind-direction"
-                          value="0"
-                          checked={windDirection === "0"}
-                          onChange={(e) => setWindDirection(e.target.value)}
-                          className="w-4 h-4 accent-gray-700 bg-gray-100 border-gray-300"
-                        />
-                        <label htmlFor="wind-0" className="text-sm text-gray-700">
-                          0°
-                        </label>
+            {/* Controls at bottom - Fixed height */}
+            <div className="bg-white border-t flex-shrink-0" style={{ minHeight: "200px" }}>
+              <div className="p-4">
+                <div className="max-w-4xl mx-auto space-y-6">
+                  {/* First row: Plan Area Density and Std of Building Height */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Plan Area Density: {(areaDensities[areaDensityIndex] || 0).toFixed(2)}
+                      </label>
+                      <input
+                        type="range"
+                        min={0}
+                        max={Math.max(0, areaDensities.length - 1)}
+                        step={1}
+                        value={areaDensityIndex}
+                        onChange={(e) => setAreaDensityIndex(Number(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-dark"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500 px-1">
+                        {areaDensities.map((density, index) => (
+                          <span key={index} className={index === areaDensityIndex ? "font-bold" : ""}>
+                            {(density || 0).toFixed(2)}
+                          </span>
+                        ))}
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id="wind-45"
-                          name="wind-direction"
-                          value="45"
-                          checked={windDirection === "45"}
-                          onChange={(e) => setWindDirection(e.target.value)}
-                          className="w-4 h-4 accent-gray-700 bg-gray-100 border-gray-300"
-                        />
-                        <label htmlFor="wind-45" className="text-sm text-gray-700">
-                          45°
-                        </label>
+                    </div>
+
+                    {/* Standard Deviation slider */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Std of Building Height: {getStdDevFromVerticalConfig(currentStdDev).toFixed(2)}
+                      </label>
+                      <input
+                        type="range"
+                        min={0}
+                        max={Math.max(0, standardDeviations.length - 1)}
+                        step={1}
+                        value={stdDevIndex}
+                        onChange={(e) => setStdDevIndex(Number(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-dark"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500 px-1">
+                        {standardDeviations.map((sd, index) => (
+                          <span key={index} className={index === stdDevIndex ? "font-bold" : ""}>
+                            {getStdDevFromVerticalConfig(sd).toFixed(2)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Second row: Horizontal Configuration and Wind Direction */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Horizontal Configuration switch */}
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="staggered-mode"
+                        checked={isStaggered}
+                        onChange={(e) => setIsStaggered(e.target.checked)}
+                        className="w-4 h-4 accent-gray-700 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
+                      />
+                      <label htmlFor="staggered-mode" className="text-sm font-medium text-gray-700">
+                        Horizontal Configuration (Staggered)
+                      </label>
+                    </div>
+
+                    {/* Wind Direction radio buttons */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Wind Direction</label>
+                      <div className="flex space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="wind-0"
+                            name="wind-direction"
+                            value="0"
+                            checked={windDirection === "0"}
+                            onChange={(e) => setWindDirection(e.target.value)}
+                            className="w-4 h-4 accent-gray-700 bg-gray-100 border-gray-300"
+                          />
+                          <label htmlFor="wind-0" className="text-sm text-gray-700">
+                            0°
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="wind-45"
+                            name="wind-direction"
+                            value="45"
+                            checked={windDirection === "45"}
+                            onChange={(e) => setWindDirection(e.target.value)}
+                            className="w-4 h-4 accent-gray-700 bg-gray-100 border-gray-300"
+                          />
+                          <label htmlFor="wind-45" className="text-sm text-gray-700">
+                            45°
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -283,7 +290,7 @@ export default function ColumnGrid() {
           </div>
         </div>
 
-        {/* Case Info Container - Right Side */}
+        {/* Case Info Container - Right Side - Fixed height */}
         <div className="w-80 bg-white border border-gray-300 rounded-lg shadow-lg" style={{ height: "100%" }}>
           <div className="p-4 h-full overflow-y-auto">
             <div className="font-bold mb-4 text-lg">Case Information</div>
@@ -440,14 +447,8 @@ function Arrow2D({
 
         return (
           <group key={`segment-${index}`}>
-            <line>
-              <primitive object={geometry} attach="geometry" />
-              <lineBasicMaterial color={color} linewidth={3} />
-            </line>
-            <line>
-              <primitive object={geometryOffset} attach="geometry" />
-              <lineBasicMaterial color={color} linewidth={3} />
-            </line>
+            <primitive object={new THREE.Line(geometry, new THREE.LineBasicMaterial({ color, linewidth: 3 }))} />
+            <primitive object={new THREE.Line(geometryOffset, new THREE.LineBasicMaterial({ color, linewidth: 3 }))} />
           </group>
         )
       })}
