@@ -75,7 +75,7 @@ export default function ColumnGrid() {
       const matchesLayout = (caseData["Horizontal Configuration"] === "Aligned") === !isStaggered
       const matchesWind = Number(caseData["Wind Direction"]) === Number.parseInt(windDirection)
       const matchesDensity = Math.abs(Number(caseData.areaDensity) - areaDensities[areaDensityIndex]) < 0.001
-      const matchesStdDev = Math.abs(Number(caseData["Std of Building Height"]) - standardDeviations[stdDevIndex]) < 0.1
+      const matchesStdDev = Math.abs(Number(caseData["Std of Building Height"]) - standardDeviations[stdDevIndex]) < 0.01
 
       return matchesLayout && matchesWind && matchesDensity && matchesStdDev
     })
@@ -98,7 +98,7 @@ export default function ColumnGrid() {
   const minHeight = Math.min(...scaledHeights)
   const maxHeight = Math.max(...scaledHeights)
 
-  return (
+   return (
     <div className="w-full flex flex-col bg-gray-100">
       <style jsx>{`
         .slider-dark::-webkit-slider-thumb {
@@ -123,18 +123,19 @@ export default function ColumnGrid() {
         }
       `}</style>
       {/* Page Title */}
-       
-        <div className="container mx-auto py-3">
-        <h1 className="text-3xl font-bold text-gray-900">Idealized Building Blocks</h1>
+      <div className="bg-white border-b">
+        <div className="container mx-auto px-0 py-4">
+          <h1 className="text-3xl font-bold text-gray-900">Idealized Building Blocks</h1>
+        </div>
       </div>
 
       {/* Main Content */}
-      
-      <div className="container mx-auto ">
-        
-      <div className="flex gap-6 py-3" style={{ height: "calc(100vh - 200px)" }}>
+      <div
+        className="container mx-auto px-0 flex items-start justify-between py-4"
+        style={{ height: "calc(100vh - 200px)" }}
+      >
         {/* 3D Model Container - Left Side */}
-        <div className="flex-1 bg-white border border-gray-300 rounded-lg shadow-lg" style={{ height: "100%" }}>
+        <div className="flex-1 mr-6 bg-white border border-gray-300 rounded-lg shadow-lg" style={{ height: "100%" }}>
           <div className="h-full flex flex-col">
             {/* Height Scale Legend - Only show when there's a matching case */}
             {hasMatchingCase && (
@@ -177,7 +178,7 @@ export default function ColumnGrid() {
 
             {/* Controls at bottom */}
             <div className="bg-white p-4 border-t flex-shrink-0">
-              <div className="max-w-3xl mx-auto space-y-6">
+              <div className="max-w-4xl mx-auto space-y-6">
                 {/* First row: Plan Area Density and Std of Building Height */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
@@ -281,43 +282,45 @@ export default function ColumnGrid() {
             </div>
           </div>
         </div>
-                      
+
         {/* Case Info Container - Right Side */}
-        <div className="w-96 bg-white border border-gray-300 rounded-lg shadow-lg" style={{ height: "100%" }}>
-          <div className="p-6 h-full overflow-y-auto">
-            <div className="font-bold mb-4 text-xl">Case Information</div>
+        <div className="w-80 bg-white border border-gray-300 rounded-lg shadow-lg" style={{ height: "100%" }}>
+          <div className="p-4 h-full overflow-y-auto">
+            <div className="font-bold mb-4 text-lg">Case Information</div>
 
             {/* No matching case warning */}
             {!hasMatchingCase && (
               <div className="flex items-center mb-4 p-3 bg-red-50 border border-red-200 rounded">
                 <AlertTriangle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0" />
-                <span className="text-red-700 font-medium">No such case in the database</span>
+                <span className="text-red-700 font-medium text-sm">No such case in the database</span>
               </div>
             )}
 
             {/* Case Details */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3 mb-4">
               <div>
-                <span className="font-semibold text-gray-700">Folder Name:</span>
-                <div className="text-gray-900">{hasMatchingCase ? currentCase["Folder Name"] : ""}</div>
+                <span className="font-semibold text-gray-700 text-sm">Folder Name:</span>
+                <div className="text-gray-900 text-sm">{hasMatchingCase ? currentCase["Folder Name"] : ""}</div>
               </div>
               <div>
-                <span className="font-semibold text-gray-700">Plan Area Density:</span>
-                <div className="text-gray-900">
+                <span className="font-semibold text-gray-700 text-sm">Plan Area Density:</span>
+                <div className="text-gray-900 text-sm">
                   {hasMatchingCase ? (areaDensities[areaDensityIndex] || 0).toFixed(2) : ""}
                 </div>
               </div>
               <div>
-                <span className="font-semibold text-gray-700">Horizontal Configuration:</span>
-                <div className="text-gray-900">{hasMatchingCase ? (isStaggered ? "Staggered" : "Aligned") : ""}</div>
+                <span className="font-semibold text-gray-700 text-sm">Horizontal Configuration:</span>
+                <div className="text-gray-900 text-sm">
+                  {hasMatchingCase ? (isStaggered ? "Staggered" : "Aligned") : ""}
+                </div>
               </div>
               <div>
-                <span className="font-semibold text-gray-700">Wind Direction:</span>
-                <div className="text-gray-900">{hasMatchingCase ? `${windDirection}°` : ""}</div>
+                <span className="font-semibold text-gray-700 text-sm">Wind Direction:</span>
+                <div className="text-gray-900 text-sm">{hasMatchingCase ? `${windDirection}°` : ""}</div>
               </div>
               <div>
-                <span className="font-semibold text-gray-700">Std of Building Height:</span>
-                <div className="text-gray-900">
+                <span className="font-semibold text-gray-700 text-sm">Std of Building Height:</span>
+                <div className="text-gray-900 text-sm">
                   {hasMatchingCase ? getStdDevFromVerticalConfig(currentStdDev).toFixed(2) : ""}
                 </div>
               </div>
@@ -325,8 +328,8 @@ export default function ColumnGrid() {
 
             {/* PNG Image */}
             {hasMatchingCase && pngFile && (
-              <div className="mb-6">
-                <div className="font-semibold text-gray-700 mb-2">Preview Image:</div>
+              <div className="mb-4">
+                <div className="font-semibold text-gray-700 mb-2 text-sm">Preview Image:</div>
                 <div className="border rounded-lg overflow-hidden bg-white">
                   <img
                     src={pngFile["Direct Download Link"] || "/placeholder.svg"}
@@ -342,10 +345,10 @@ export default function ColumnGrid() {
 
             {/* Download Button */}
             {hasMatchingCase && currentCase.Files && (
-              <div className="mt-6">
+              <div className="mt-4">
                 <button
                   onClick={() => downloadAllFiles(currentCase.Files)}
-                  className="w-full flex items-center justify-center px-4 py-2 bg-gray-800 text-white font-medium rounded-lg hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                  className="w-full flex items-center justify-center px-3 py-2 bg-gray-800 text-white font-medium rounded-lg hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Download All Files ({currentCase.Files.length} files)
@@ -355,7 +358,6 @@ export default function ColumnGrid() {
           </div>
         </div>
       </div>
-    </div>
     </div>
   )
 }
@@ -556,7 +558,7 @@ function ColumnGridComponent({
         z += spacing / 2
       }
 
-      const index = row * cols + col
+      const index = (rows - 1 - row) * cols + col
       const height = columnHeights[index] || 1.6
       const color = columnColors[index] || "#808080"
 
