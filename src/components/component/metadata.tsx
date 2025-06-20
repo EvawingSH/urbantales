@@ -13,17 +13,17 @@ interface FileData {
 
 const metadataFiles: FileData[] = [
   {
-    fileName: "Flow metadata",
+    fileName: "Flow Data",
     description: "Metadata for each case and canopy-averaged flow statistics as describled in Nazarian et al., (2025).",
     downloadUrl:
-      "https://urbantales.020495.xyz/index.php/s/9SrPX94gfxkc6rZ/download",
+      "https://urbantales.020495.xyz/index.php/s/G8f5nXYMbW9f48A/download",
   },
   {
     fileName: "Metadata",
     description:
       "Metadata such as urban geometrical parameters, the position of the neighborhoods, and other configurations as describled in Nazarian et al., (2025).",
     downloadUrl:
-      "https://urbantales.020495.xyz/index.php/s/jKZQj6NCN6ZGQjT/download",
+      "https://urbantales.020495.xyz/index.php/s/9SrPX94gfxkc6rZ/download",
   },
 ]
 
