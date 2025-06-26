@@ -14,7 +14,7 @@ interface FileData {
 const metadataFiles: FileData[] = [
   {
     fileName: "Flow Data",
-    description: "Metadata for each case and canopy-averaged flow statistics as describled in Nazarian et al., (2025).",
+    description: "Flow characteristics for each case, including canopy-averaged, aerodynamic, and sampled statistics.",
     downloadUrl:
       "https://urbantales.020495.xyz/index.php/s/G8f5nXYMbW9f48A/download",
   },
@@ -25,6 +25,13 @@ const metadataFiles: FileData[] = [
     downloadUrl:
       "https://urbantales.020495.xyz/index.php/s/9SrPX94gfxkc6rZ/download",
   },
+    {
+    fileName: "Readme",
+    description:
+      "Readme file with details on how to read the data and metadata files.",
+    downloadUrl:
+      "https://urbantales.020495.xyz/index.php/s/xwFGLBGB9gHaBN9/download",
+  }
 ]
 
 const FileTable: React.FC<{ files: FileData[] }> = ({ files }) => {
