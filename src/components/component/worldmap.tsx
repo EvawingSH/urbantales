@@ -192,18 +192,6 @@ export default function WorldMap({
     return tiles
   }
 
-  // Get unique cities for markers
-  const uniqueCities = filteredCities.reduce(
-    (acc, city) => {
-      const key = `${city.name}-${city.country}`
-      if (!acc[key]) {
-        acc[key] = city
-      }
-      return acc
-    },
-    {} as Record<string, City>,
-  )
-
   const tiles = generateTiles()
 
   return (
@@ -235,16 +223,16 @@ export default function WorldMap({
         ))}
       </div>
 
-      {/* Render city markers */}
+      {/* Render city markers - Show ALL cities with their real coordinates */}
       <div className="absolute inset-0 pointer-events-none">
-        {Object.values(uniqueCities)
+        {filteredCities
           .filter((city) => city.coordinates && Array.isArray(city.coordinates) && city.coordinates.length === 2)
           .map((city) => {
             const pixel = latLngToPixel(city.coordinates[1], city.coordinates[0])
 
             return (
               <div
-                key={`${city.name}-${city.country}`}
+                key={city.id} // Use unique ID instead of city name
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer pointer-events-auto"
                 style={{
                   left: pixel.x,
@@ -256,7 +244,7 @@ export default function WorldMap({
               >
                 <div
                   className={`rounded-full border-2 border-white shadow-lg transition-all ${
-                    selectedCity && selectedCity.name === city.name
+                    selectedCity && selectedCity.id === city.id
                       ? "w-4 h-4 bg-red-500"
                       : "w-3 h-3 bg-red-400 hover:bg-red-500"
                   }`}
@@ -326,13 +314,11 @@ export default function WorldMap({
               <span>
                 {hoveredCity.name}, {hoveredCity.country}
               </span>
-              {cityCounts[hoveredCity.name] > 1 && (
-                <span className="inline-block">
-                  <Badge variant="outline" className="text-xs">
-                    {cityCounts[hoveredCity.name]} cases
-                  </Badge>
-                </span>
-              )}
+              <span className="inline-block">
+                <Badge variant="outline" className="text-xs">
+                  {hoveredCity.folderName}
+                </Badge>
+              </span>
             </div>
           </div>
         )}

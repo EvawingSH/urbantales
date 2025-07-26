@@ -55,9 +55,6 @@ const cityCounts = cityData.reduce(
 )
 
 export default function WorldMapPage() {
-  // Find first city in the data
-  const firstCity = cityData[0]
-
   const [selectedCity, setSelectedCity] = useState<City | null>(null)
   const [filteredCities, setFilteredCities] = useState<City[]>(cityData)
   const [displayedCities, setDisplayedCities] = useState<City[]>(cityData)
@@ -65,7 +62,7 @@ export default function WorldMapPage() {
   const [zoomToLocation, setZoomToLocation] = useState<{ coordinates: [number, number]; zoom: number } | null>(null)
   const { toast } = useToast()
 
-  // Get all cases for the selected city
+  // Get all cases for the selected city (for showing additional info)
   const selectedCityCases = useMemo(() => {
     if (!selectedCity) return []
     return cityData.filter((city) => city.name === selectedCity.name)
@@ -94,8 +91,8 @@ export default function WorldMapPage() {
         if (cityToZoom) {
           setZoomToLocation({ coordinates: cityToZoom.coordinates, zoom: 500 })
         }
-      } else if (filters.city === "all") {
-        // Reset zoom when no specific city is selected
+      } else {
+        // When no specific city is selected, show global view
         setZoomToLocation({ coordinates: [0, 0], zoom: 100 })
       }
 
@@ -201,9 +198,8 @@ export default function WorldMapPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
       <main className="flex-1 container mx-auto py-6">
-        <h1 className="text-3xl font-bold mb-6">Realistic Urban Neighbourhoods</h1>
+        <h1 className="text-3xl font-bold mb-6">World Cities Explorer</h1>
 
         {/* Main container - increased to 70% of screen height */}
         <div className="h-[70vh] flex flex-col lg:flex-row">
@@ -244,7 +240,6 @@ export default function WorldMapPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   )
 }
