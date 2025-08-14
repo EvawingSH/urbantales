@@ -89,7 +89,7 @@ export default function WorldMapPage() {
         // Find the first city that matches the filter and zoom to it
         const cityToZoom = cityData.find((city) => city.name === filters.city)
         if (cityToZoom) {
-          setZoomToLocation({ coordinates: cityToZoom.coordinates, zoom: 500 })
+          setZoomToLocation({ coordinates: cityToZoom.coordinates, zoom: 600 })
         }
       } else {
         // When no specific city is selected, show global view
@@ -104,11 +104,11 @@ export default function WorldMapPage() {
     [cityData],
   )
 
-  // Handle city selection from the map
+ // Handle city selection from the map - zoom to case level
   const handleMapCitySelect = useCallback((city: City) => {
     setSelectedCity(city)
-    // Zoom to the selected city
-    setZoomToLocation({ coordinates: city.coordinates, zoom: 500 })
+    // Zoom to the selected case at high zoom level (16)
+    setZoomToLocation({ coordinates: city.coordinates, zoom: 900 }) // 800/50 = 16
   }, [])
 
   // Handle city selection from filters
@@ -117,7 +117,7 @@ export default function WorldMapPage() {
 
     // Zoom to the selected city if one is selected
     if (city) {
-      setZoomToLocation({ coordinates: city.coordinates, zoom: 500 })
+      setZoomToLocation({ coordinates: city.coordinates, zoom: 900 }) // 800/50 = 16
     }
   }, [])
 
